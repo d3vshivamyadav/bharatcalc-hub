@@ -1,0 +1,13 @@
+# BharatCalc Hub — Search Engine Crawl Directives
+# Live Canonical Property: https://bharatcalc-hub.vercel.app/
+
+User-agent: *
+Allow: /
+
+# Exclude internal design mockups & stitch export documentation
+Disallow: /code.html
+Disallow: /DESIGN.md
+Disallow: /screen.png
+
+Sitemap: https://bharatcalc-hub.vercel.app/sitemap.xml
+

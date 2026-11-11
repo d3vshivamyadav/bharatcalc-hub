@@ -1,0 +1,12 @@
+/* TEAM */
+Project: BharatCalc Hub
+Site: https://bharatcalc-hub.vercel.app/
+Repository: https://github.com/d3vshivamyadav/bharatcalc-hub
+Region: India (en-IN)
+
+/* STANDARDS & REFERENCES */
+Tax Law Basis: Income-tax Act, 2025 & Finance Act, 2026 (Tax Year 2026-27 / AY 2027-28)
+Indirect Tax Basis: GST 2.0 Tariff Schedule & Legacy Reconciliation Brackets
+Technology: Static HTML5, Tailwind CSS, Vanilla ES6 JS, Client-Side A4 PDF & OOXML DOCX
+Last Update: 2026-11-11
+

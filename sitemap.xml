@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://bharatcalc-hub.vercel.app/</loc>
+    <lastmod>2026-11-11</lastmod>
+    <image:image>
+      <image:loc>https://bharatcalc-hub.vercel.app/og-preview.png</image:loc>
+      <image:title>BharatCalc Hub — Indian Income Tax (TY 2026-27), GST 2.0, SIP, HRA, FD/RD &amp; NPS Calculators</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://bharatcalc-hub.vercel.app/BharatCalc%20Logo.png</image:loc>
+      <image:title>BharatCalc Hub Brand Logo</image:title>
+    </image:image>
+  </url>
+</urlset>
+
