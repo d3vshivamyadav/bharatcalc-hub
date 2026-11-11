@@ -1,0 +1,3027 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="shell-type" content="web_standard" />
+  <title>BharatCalc Hub — Indian Financial Calculator Suite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+    rel="stylesheet" />
+  <style>
+    @layer base {
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        overscroll-behavior: none;
+      }
+
+      main> :first-child {
+        margin-top: 0 !important;
+      }
+
+      main> :last-child {
+        margin-bottom: 0 !important;
+      }
+    }
+
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Tabular numerals for jitter-free financial figures */
+    .tnum {
+      font-feature-settings: 'tnum' 1, 'cv05' 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Hide native number spinners for cleaner currency inputs */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    /* Custom Range Slider (DESIGN.md: emerald progress track + 20px crisp thumb) */
+    input[type="range"].bharat-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 9999px;
+      background: linear-gradient(to right, #005d42 0%, #005d42 var(--slider-pct, 50%), #dae2fd var(--slider-pct, 50%), #dae2fd 100%);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"].bharat-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 9999px;
+      background: #ffffff;
+      border: 3px solid #005d42;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.22);
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input[type="range"].bharat-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.08);
+      box-shadow: 0 4px 10px rgba(4, 120, 87, 0.28);
+    }
+
+    input[type="range"].bharat-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 9999px;
+      background: #ffffff;
+      border: 3px solid #005d42;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.22);
+      cursor: pointer;
+    }
+
+    /* Subtle pulse highlight on explicit Calculate click */
+    @keyframes calcPulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(0, 93, 66, 0.28);
+      }
+
+      70% {
+        box-shadow: 0 0 0 10px rgba(0, 93, 66, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(0, 93, 66, 0);
+      }
+    }
+
+    .calc-flash {
+      animation: calcPulse 0.55s ease-out;
+    }
+
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 12mm;
+      }
+
+      header,
+      main,
+      footer,
+      .no-print,
+      #bharat-toast,
+      #ca-modal {
+        display: none !important;
+      }
+
+      body {
+        background: #ffffff !important;
+        color: #131b2e !important;
+      }
+
+      #a4-print-sheet {
+        display: block !important;
+        width: 100% !important;
+      }
+    }
+  </style>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script defer
+    src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-primary-fixed": "#002115",
+            "secondary-fixed-dim": "#93ccff",
+            "on-secondary": "#ffffff",
+            "surface-variant": "#dae2fd",
+            "inverse-surface": "#283044",
+            "surface-bright": "#faf8ff",
+            "tertiary-container": "#945d00",
+            "on-secondary-container": "#00476e",
+            "on-error": "#ffffff",
+            "error-container": "#ffdad6",
+            "surface-tint": "#006c4e",
+            "outline-variant": "#bdc9c1",
+            "on-secondary-fixed": "#001d31",
+            "secondary-fixed": "#cce5ff",
+            "primary": "#005d42",
+            "surface-container-lowest": "#ffffff",
+            "on-tertiary-container": "#ffe6cc",
+            "inverse-on-surface": "#eef0ff",
+            "surface-container-highest": "#dae2fd",
+            "on-primary": "#ffffff",
+            "error": "#ba1a1a",
+            "tertiary-fixed-dim": "#ffb95f",
+            "surface-container-high": "#e2e7ff",
+            "primary-container": "#047857",
+            "on-primary-container": "#9ffdd3",
+            "surface-dim": "#d2d9f4",
+            "secondary": "#006398",
+            "primary-fixed": "#97f5cc",
+            "on-error-container": "#93000a",
+            "surface-container": "#eaedff",
+            "outline": "#6e7a73",
+            "inverse-primary": "#7bd8b1",
+            "on-tertiary-fixed": "#2a1700",
+            "tertiary-fixed": "#ffddb8",
+            "primary-fixed-dim": "#7bd8b1",
+            "on-surface-variant": "#3e4943",
+            "on-tertiary-fixed-variant": "#653e00",
+            "surface-container-low": "#f2f3ff",
+            "secondary-container": "#5bb8fe",
+            "on-surface": "#131b2e",
+            "on-primary-fixed-variant": "#00513a",
+            "tertiary": "#734700",
+            "background": "#faf8ff",
+            "surface": "#faf8ff",
+            "on-secondary-fixed-variant": "#004b73",
+            "on-tertiary": "#ffffff",
+            "on-background": "#131b2e"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter-desktop": "1.5rem",
+            "margin-tablet": "1.5rem",
+            "space-lg": "1.5rem",
+            "space-xs": "0.25rem",
+            "gutter": "1rem",
+            "space-md": "1rem",
+            "margin": "1rem",
+            "space-sm": "0.5rem",
+            "margin-desktop": "2rem",
+            "space-xl": "2rem",
+            "gutter-tablet": "1.25rem"
+          },
+          "fontFamily": {
+            "headline-sm": ["Plus Jakarta Sans"],
+            "label-sm": ["Inter"],
+            "display-hero-mobile": ["Plus Jakarta Sans"],
+            "body-lg": ["Inter"],
+            "label-md": ["Inter"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "display-hero": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Plus Jakarta Sans"],
+            "data-metric": ["Plus Jakarta Sans"],
+            "body-sm": ["Inter"],
+            "label-lg": ["Inter"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "body-md": ["Inter"]
+          },
+          "fontSize": {
+            "headline-sm": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "display-hero-mobile": ["34px", { "lineHeight": "40px", "letterSpacing": "-0.025em", "fontWeight": "800" }],
+            "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+            "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "display-hero": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.03em", "fontWeight": "800" }],
+            "headline-lg-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.015em", "fontWeight": "700" }],
+            "data-metric": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+            "headline-md": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }]
+          }
+        }
+      }
+    };
+  </script>
+</head>
+
+<body
+  class="bg-surface font-body-md text-on-surface min-h-screen flex flex-col selection:bg-primary-fixed selection:text-on-primary-fixed">
+
+  <!-- Fixed Header & Tool Tabs Navigation -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+    <div class="h-28 max-w-4xl mx-auto px-4 sm:px-8 flex flex-col justify-between py-2.5">
+      <!-- Top Bar -->
+      <div class="flex items-center justify-between gap-2 sm:gap-4 h-12">
+        <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div class="relative flex items-center shrink-0">
+            <img id="brand-logo-img" alt="BharatCalc Hub Logo"
+              class="h-9 w-9 object-contain rounded-xl bg-surface-container-lowest p-0.5 ring-1 ring-outline-variant/30 shadow-sm"
+              src="BharatCalc%20Logo.png"
+              onerror="this.style.display='none'; var f=document.getElementById('logo-fallback'); f.classList.remove('hidden'); f.classList.add('flex');" />
+            <div id="logo-fallback"
+              class="hidden w-9 h-9 rounded-xl bg-primary text-on-primary items-center justify-center shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">account_balance</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="min-w-0">
+              <span
+                class="font-headline-sm text-base sm:text-headline-sm text-on-surface font-bold tracking-tight truncate block leading-tight">BharatCalc
+                Hub</span>
+              <span class="hidden sm:block font-label-sm text-[10px] text-on-surface-variant tracking-wide">Tax, GST
+                &amp; Wealth Suite</span>
+            </div>
+            <span id="header-version-badge"
+              class="hidden sm:inline-flex font-label-sm text-label-sm bg-surface-container-high text-primary font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">v3.0
+              TY 26–27</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          <div id="header-compliance-badge"
+            class="hidden md:inline-flex items-center gap-1.5 bg-primary-fixed/40 text-on-primary-fixed px-2.5 py-1.5 rounded-lg">
+            <span class="w-2 h-2 rounded-full bg-primary"></span>
+            <span class="font-label-sm text-label-sm font-semibold">Tax Year 2026–27 Rates</span>
+          </div>
+
+          <div class="hidden sm:flex items-center bg-surface-container px-2.5 py-1.5 rounded-lg gap-1.5">
+            <span class="font-label-md text-label-md text-on-surface-variant font-medium">Currency:</span>
+            <span class="font-label-md text-label-md text-on-surface font-semibold">INR (₹)</span>
+          </div>
+
+          <!-- Interactive Financial Year / Tax Year Selector -->
+          <label
+            class="relative flex items-center bg-surface-container hover:bg-surface-container-high transition-colors px-2.5 py-1.5 rounded-lg gap-1.5 cursor-pointer">
+            <span class="font-label-md text-label-md text-on-surface-variant font-medium hidden lg:inline">Tax
+              Year:</span>
+            <select id="fy-period-select" aria-label="Select Tax Year"
+              class="bg-transparent font-label-md text-label-md text-on-surface font-semibold outline-none appearance-none pr-4 cursor-pointer">
+              <option value="2026-27" selected>Tax Year 2026–27</option>
+              <option value="2025-26">FY 2025–26</option>
+              <option value="2024-25">FY 2024–25</option>
+            </select>
+            <span
+              class="material-symbols-outlined text-[16px] text-on-surface-variant pointer-events-none absolute right-2">unfold_more</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Horizontal Tool Switcher Nav -->
+      <nav id="main-tool-nav" class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 text-nowrap"
+        data-active-classes="bg-primary text-on-primary font-semibold shadow-sm" aria-label="Calculator Tools">
+        <a aria-current="page"
+          class="tool-nav-link px-3.5 py-1.5 rounded-full transition-all font-label-md text-label-md bg-primary text-on-primary font-semibold shadow-sm"
+          data-path="income-tax" href="#income-tax">Income Tax (Old vs New Regime)</a>
+        <a class="tool-nav-link font-label-md text-label-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface px-3.5 py-1.5 rounded-full transition-all"
+          data-path="gst-calculator" href="#gst-calculator">GST Calculator (CGST/SGST/IGST)</a>
+        <a class="tool-nav-link font-label-md text-label-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface px-3.5 py-1.5 rounded-full transition-all"
+          data-path="sip-mutual-fund" href="#sip-mutual-fund">SIP &amp; Mutual Fund Planner</a>
+        <a class="tool-nav-link font-label-md text-label-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface px-3.5 py-1.5 rounded-full transition-all"
+          data-path="hra-rent-exemption" href="#hra-rent-exemption">HRA &amp; Rent Exemption</a>
+        <a class="tool-nav-link font-label-md text-label-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface px-3.5 py-1.5 rounded-full transition-all"
+          data-path="fd-rd-returns" href="#fd-rd-returns">FD &amp; RD Returns</a>
+        <a class="tool-nav-link font-label-md text-label-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface px-3.5 py-1.5 rounded-full transition-all"
+          data-path="nps-tax-savings" href="#nps-tax-savings">NPS Tax Savings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="w-full pt-28 flex-1 bg-surface">
+    <div class="max-w-4xl mx-auto px-4 sm:px-8 py-6">
+
+      <!-- =================================================================== -->
+      <!-- TOOL 1: INCOME TAX (OLD VS NEW REGIME)                              -->
+      <!-- =================================================================== -->
+      <section id="panel-income-tax" data-tab-panel="income-tax" class="flex flex-col w-full">
+
+        <!-- Top Utility Context Banner -->
+        <div class="relative bg-surface-container-low rounded-3xl p-6 sm:p-8 mb-6 overflow-hidden">
+          <div
+            class="absolute -right-16 -top-16 w-64 h-64 bg-primary-fixed/30 rounded-full blur-3xl pointer-events-none">
+          </div>
+          <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-1.5 max-w-xl">
+              <div
+                class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm">
+                <span class="material-symbols-outlined text-[14px]">bolt</span>
+                <span id="tax-hero-badge">Tax Year 2026–27 Slabs (Income-tax Act, 2025 &amp; Finance Act, 2026)</span>
+              </div>
+              <h1 id="tax-hero-title"
+                class="font-headline-lg text-headline-lg-mobile sm:text-headline-lg text-on-surface tracking-tight">
+                Income Tax Estimator (Tax Year 2026–27)</h1>
+              <p id="tax-hero-subtitle" class="font-body-md text-body-md text-on-surface-variant">Compare Old vs. New
+                Tax Regime liabilities with statutory deductions, Section 87A/156 rebate &amp; marginal relief,
+                surcharge, and 4% cess.</p>
+            </div>
+            <!-- Quick Summary Metric Chip -->
+            <div
+              class="flex items-center gap-3 bg-surface-container-lowest p-3 rounded-2xl shadow-sm self-start md:self-auto shrink-0">
+              <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-[22px]">savings</span>
+              </div>
+              <div>
+                <span class="font-label-sm text-label-sm text-on-surface-variant block uppercase tracking-wider">Est.
+                  Max Advantage</span>
+                <span id="hero-max-advantage"
+                  class="font-headline-sm text-headline-sm text-primary font-bold tnum">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category Segments & Statutory Profile Controls -->
+          <div class="mt-6 pt-5 border-t border-outline-variant/20 space-y-3">
+            <div class="flex flex-wrap gap-2" id="taxpayer-category-selector">
+              <button
+                class="category-btn active px-4 py-2 rounded-xl font-label-md text-label-md transition-all bg-primary text-on-primary font-semibold shadow-sm"
+                data-category="salaried" type="button">
+                Below 60 — Salaried
+              </button>
+              <button
+                class="category-btn px-4 py-2 rounded-xl font-label-md text-label-md transition-all bg-surface-container hover:bg-surface-container-high text-on-surface"
+                data-category="self-employed" type="button">
+                Self-Employed / Business
+              </button>
+              <button
+                class="category-btn px-4 py-2 rounded-xl font-label-md text-label-md transition-all bg-surface-container hover:bg-surface-container-high text-on-surface"
+                data-category="senior" type="button">
+                Senior Citizen (60–79 Yrs)
+              </button>
+              <button
+                class="category-btn px-4 py-2 rounded-xl font-label-md text-label-md transition-all bg-surface-container hover:bg-surface-container-high text-on-surface"
+                data-category="super-senior" type="button">
+                Super Senior (80+ Yrs)
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+              <div
+                class="flex items-center justify-between gap-2 bg-surface-container-lowest/80 px-3 py-2 rounded-xl border border-outline-variant/20">
+                <label for="tax-income-source" class="font-label-sm text-label-sm text-on-surface-variant">Income
+                  Source</label>
+                <select id="tax-income-source"
+                  class="bg-transparent font-label-md text-label-md text-on-surface font-semibold outline-none cursor-pointer">
+                  <option value="salaried" selected>Salaried / Pensioner</option>
+                  <option value="self-employed">Self-Employed / Other</option>
+                </select>
+              </div>
+              <div
+                class="flex items-center justify-between gap-2 bg-surface-container-lowest/80 px-3 py-2 rounded-xl border border-outline-variant/20">
+                <label for="tax-residency" class="font-label-sm text-label-sm text-on-surface-variant">Residential
+                  Status</label>
+                <select id="tax-residency"
+                  class="bg-transparent font-label-md text-label-md text-on-surface font-semibold outline-none cursor-pointer">
+                  <option value="resident" selected>Resident (India)</option>
+                  <option value="nri">Non-Resident (NRI)</option>
+                </select>
+              </div>
+              <div
+                class="flex items-center justify-between gap-2 bg-surface-container-lowest/80 px-3 py-2 rounded-xl border border-outline-variant/20">
+                <label for="tax-employer-sector" class="font-label-sm text-label-sm text-on-surface-variant">Employer
+                  Sector (NPS)</label>
+                <select id="tax-employer-sector"
+                  class="bg-transparent font-label-md text-label-md text-on-surface font-semibold outline-none cursor-pointer">
+                  <option value="private" selected>Private / Corporate</option>
+                  <option value="government">Central / State Govt</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Primary Interactive Card -->
+        <div class="bg-surface-container-lowest rounded-3xl p-6 sm:p-8 shadow-xl shadow-surface-variant/40 mb-8">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b border-outline-variant/20">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[24px]">calculate</span>
+              <h2 class="font-headline-sm text-headline-sm text-on-surface">Income &amp; Investment Inputs</h2>
+            </div>
+            <span id="tax-ay-badge"
+              class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2.5 py-1 rounded-md">Tax
+              Year 2026–27 (AY 2027–28)</span>
+          </div>
+
+          <!-- Inputs Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- Field 1: Gross Salary -->
+            <div class="space-y-1.5 sm:col-span-2 lg:col-span-1">
+              <div class="flex justify-between items-center gap-2">
+                <label id="income-gross-label" class="font-label-md text-label-md text-on-surface font-semibold"
+                  for="income-gross">Gross Annual Salary</label>
+                <span class="font-label-sm text-label-sm text-primary font-medium shrink-0">Required</span>
+              </div>
+              <div class="relative">
+                <span
+                  class="absolute left-3.5 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">₹</span>
+                <input
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-8 pr-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+                  id="income-gross" min="0" step="10000" type="number" value="" placeholder="e.g. 1500000" />
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                <span class="font-label-sm text-label-sm text-on-surface-variant">Presets:</span>
+                <button
+                  class="preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-val="1000000" type="button">10L</button>
+                <button
+                  class="preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-val="1275000" type="button">12.75L</button>
+                <button
+                  class="preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-val="1500000" type="button">15L</button>
+                <button
+                  class="preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-val="1850000" type="button">18.5L</button>
+                <button
+                  class="preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-val="2500000" type="button">25L</button>
+                <button
+                  class="preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-val="3000000" type="button">30L</button>
+              </div>
+            </div>
+
+            <!-- Field 2: Standard Deduction -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center gap-2">
+                <label class="font-label-md text-label-md text-on-surface font-semibold" for="ded-standard">Standard
+                  Deduction</label>
+                <span id="std-ded-badge"
+                  class="font-label-sm text-label-sm text-primary-container bg-primary-fixed/40 px-1.5 py-0.5 rounded shrink-0">Sec
+                  19 / 16(ia)</span>
+              </div>
+              <div class="relative">
+                <span
+                  class="absolute left-3.5 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">₹</span>
+                <input
+                  class="tnum w-full bg-surface-container-low text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-8 pr-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none cursor-not-allowed opacity-90"
+                  id="ded-standard" readonly type="number" value="" placeholder="Auto (₹75k / ₹50k)" />
+              </div>
+              <p id="std-ded-note" class="font-body-sm text-body-sm text-on-surface-variant">₹75,000 New Regime /
+                ₹50,000 Old Regime (Salaried)</p>
+            </div>
+
+            <!-- Field 3: Section 80C with interactive sub-itemizer -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center gap-2">
+                <label class="font-label-md text-label-md text-on-surface font-semibold" for="ded-80c">Section 80C (PPF,
+                  ELSS, EPF)</label>
+                <span class="font-label-sm text-label-sm text-on-surface-variant shrink-0">Max ₹1.5L (Old)</span>
+              </div>
+              <div class="relative">
+                <span
+                  class="absolute left-3.5 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">₹</span>
+                <input
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-8 pr-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+                  id="ded-80c" min="0" max="150000" step="5000" type="number" value="" placeholder="0 (Max 150000)" />
+              </div>
+              <div class="flex items-center justify-between gap-2">
+                <p id="ded-80c-note" class="font-body-sm text-body-sm text-on-surface-variant">0% of ₹1.5L Old Regime
+                  limit used</p>
+                <button id="toggle-80c-split" type="button"
+                  class="font-label-sm text-label-sm text-primary hover:underline shrink-0 flex items-center gap-0.5">
+                  <span>Itemize</span>
+                  <span class="material-symbols-outlined text-[14px]">tune</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Optional Expandable Section 80C Breakdown Drawer -->
+            <div id="drawer-80c-split"
+              class="hidden sm:col-span-2 lg:col-span-3 bg-surface-container-low/80 rounded-2xl p-4 border border-outline-variant/30">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary text-[18px]">pie_chart</span>
+                  <span class="font-label-lg text-label-lg text-on-surface">Section 80C Component Breakdown (Old Regime
+                    Cap: ₹1,50,000)</span>
+                </div>
+                <span id="split-80c-total-pill"
+                  class="font-label-sm text-label-sm bg-primary-fixed text-on-primary-fixed px-2.5 py-0.5 rounded-full tnum">Total:
+                  ₹0 (Eligible: ₹0)</span>
+              </div>
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div>
+                  <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1" for="split-80c-epf">EPF
+                    / VPF</label>
+                  <div class="relative">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-sm">₹</span>
+                    <input id="split-80c-epf" type="number" min="0" step="1000" value="" placeholder="0"
+                      class="split-80c-input tnum w-full bg-surface-container-lowest text-on-surface placeholder:text-outline/50 pl-6 pr-2 py-2 rounded-lg font-label-lg text-sm outline-none focus:ring-2 focus:ring-primary/20" />
+                  </div>
+                </div>
+                <div>
+                  <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1" for="split-80c-ppf">PPF
+                    / Sukanya</label>
+                  <div class="relative">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-sm">₹</span>
+                    <input id="split-80c-ppf" type="number" min="0" step="1000" value="" placeholder="0"
+                      class="split-80c-input tnum w-full bg-surface-container-lowest text-on-surface placeholder:text-outline/50 pl-6 pr-2 py-2 rounded-lg font-label-lg text-sm outline-none focus:ring-2 focus:ring-primary/20" />
+                  </div>
+                </div>
+                <div>
+                  <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1"
+                    for="split-80c-elss">ELSS Mutual Funds</label>
+                  <div class="relative">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-sm">₹</span>
+                    <input id="split-80c-elss" type="number" min="0" step="1000" value="" placeholder="0"
+                      class="split-80c-input tnum w-full bg-surface-container-lowest text-on-surface placeholder:text-outline/50 pl-6 pr-2 py-2 rounded-lg font-label-lg text-sm outline-none focus:ring-2 focus:ring-primary/20" />
+                  </div>
+                </div>
+                <div>
+                  <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1" for="split-80c-lic">LIC
+                    / Home Principal</label>
+                  <div class="relative">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-sm">₹</span>
+                    <input id="split-80c-lic" type="number" min="0" step="1000" value="" placeholder="0"
+                      class="split-80c-input tnum w-full bg-surface-container-lowest text-on-surface placeholder:text-outline/50 pl-6 pr-2 py-2 rounded-lg font-label-lg text-sm outline-none focus:ring-2 focus:ring-primary/20" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Field 4: Section 80D -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center gap-2">
+                <label class="font-label-md text-label-md text-on-surface font-semibold" for="ded-80d">Section 80D
+                  (Health Cover)</label>
+                <span id="ded-80d-cap-pill" class="font-label-sm text-label-sm text-on-surface-variant shrink-0">Max
+                  ₹50k (Old)</span>
+              </div>
+              <div class="relative">
+                <span
+                  class="absolute left-3.5 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">₹</span>
+                <input
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-8 pr-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+                  id="ded-80d" min="0" max="100000" step="1000" type="number" value="" placeholder="0 (e.g. 25000)" />
+              </div>
+              <div class="flex items-center justify-between gap-2">
+                <p id="ded-80d-note" class="font-body-sm text-body-sm text-on-surface-variant">Self ₹25k + Parents ₹25k
+                </p>
+                <label
+                  class="inline-flex items-center gap-1.5 text-label-sm font-label-sm text-on-surface cursor-pointer shrink-0">
+                  <input id="ded-80d-senior-parents" type="checkbox" class="accent-primary rounded" />
+                  <span>Parents 60+</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Field 5: Section 24b -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center gap-2">
+                <label class="font-label-md text-label-md text-on-surface font-semibold" for="ded-24b">Sec 24(b) Home
+                  Loan Interest</label>
+                <span class="font-label-sm text-label-sm text-on-surface-variant shrink-0">Max ₹2.0L (Old)</span>
+              </div>
+              <div class="relative">
+                <span
+                  class="absolute left-3.5 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">₹</span>
+                <input
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-8 pr-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+                  id="ded-24b" min="0" max="200000" step="5000" type="number" value="" placeholder="0 (Max 200000)" />
+              </div>
+              <p id="ded-24b-note" class="font-body-sm text-body-sm text-on-surface-variant">Self-occupied residential
+                property (Old Regime)</p>
+            </div>
+
+            <!-- Field 6: HRA & LTA Exemptions -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center gap-2">
+                <label class="font-label-md text-label-md text-on-surface font-semibold" for="ded-other">HRA, LTA &amp;
+                  Sec 80CCD(1B) NPS</label>
+                <button id="toggle-advanced-tax" type="button"
+                  class="font-label-sm text-label-sm text-primary hover:underline shrink-0 flex items-center gap-0.5">
+                  <span>+ NPS 80CCD(2) &amp; CG</span>
+                </button>
+              </div>
+              <div class="relative">
+                <span
+                  class="absolute left-3.5 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">₹</span>
+                <input
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-8 pr-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+                  id="ded-other" min="0" step="5000" type="number" value="" placeholder="0 (HRA / LTA / etc.)" />
+              </div>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">HRA/LTA exempt under Old Regime only</p>
+            </div>
+
+            <!-- Expandable NPS 80CCD & Capital Gains Drawer -->
+            <div id="drawer-advanced-tax"
+              class="hidden sm:col-span-2 lg:col-span-3 bg-surface-container-low/80 rounded-2xl p-4 border border-outline-variant/30 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary text-[18px]">tune</span>
+                  <span class="font-label-lg text-label-lg text-on-surface">NPS Contributions &amp; Special-Rate Capital
+                    Gains</span>
+                </div>
+                <span class="font-label-sm text-label-sm text-on-surface-variant">80CCD(2) applies in BOTH regimes; Sec
+                  111A/112A excluded from 87A rebate</span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <div>
+                  <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1" for="ded-nps-1b">NPS
+                    80CCD(1B) (Max ₹50k Old)</label>
+                  <div class="relative">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-sm">₹</span>
+                    <input id="ded-nps-1b" type="number" min="0" max="50000" step="1000" value="" placeholder="0"
+                      class="tnum w-full bg-surface-container-lowest text-on-surface placeholder:text-outline/50 pl-6 pr-2 py-2 rounded-lg font-label-lg text-sm outline-none focus:ring-2 focus:ring-primary/20" />
+                  </div>
+                </div>
+                <div>
+                  <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1"
+                    for="ded-basic-da">Annual Basic + DA (for 80CCD(2))</label>
+                  <div class="relative">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-sm">₹</span>
+                    <input id="ded-basic-da" type="number" min="0" step="10000" value="" placeholder="Optional"
+                      class="tnum w-full bg-surface-container-lowest text-on-surface placeholder:text-outline/50 pl-6 pr-2 py-2 rounded-lg font-label-lg text-sm outline-none focus:ring-2 focus:ring-primary/20" />
+                  </div>
+                </div>
+                <div>
+                  <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1"
+                    for="ded-nps-emp">Employer NPS 80CCD(2)</label>
+                  <div class="relative">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-sm">₹</span>
+                    <input id="ded-nps-emp" type="number" min="0" step="1000" value="" placeholder="0"
+                      class="tnum w-full bg-surface-container-lowest text-on-surface placeholder:text-outline/50 pl-6 pr-2 py-2 rounded-lg font-label-lg text-sm outline-none focus:ring-2 focus:ring-primary/20" />
+                  </div>
+                </div>
+                <div>
+                  <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1" for="income-stcg">STCG
+                    Sec 111A (20%)</label>
+                  <div class="relative">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-sm">₹</span>
+                    <input id="income-stcg" type="number" min="0" step="5000" value="" placeholder="0"
+                      class="tnum w-full bg-surface-container-lowest text-on-surface placeholder:text-outline/50 pl-6 pr-2 py-2 rounded-lg font-label-lg text-sm outline-none focus:ring-2 focus:ring-primary/20" />
+                  </div>
+                </div>
+                <div>
+                  <label class="font-label-sm text-label-sm text-on-surface-variant block mb-1" for="income-ltcg">LTCG
+                    Sec 112A (12.5% &gt;₹1.25L)</label>
+                  <div class="relative">
+                    <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-outline text-sm">₹</span>
+                    <input id="income-ltcg" type="number" min="0" step="5000" value="" placeholder="0"
+                      class="tnum w-full bg-surface-container-lowest text-on-surface placeholder:text-outline/50 pl-6 pr-2 py-2 rounded-lg font-label-lg text-sm outline-none focus:ring-2 focus:ring-primary/20" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-Time Validation Error & Statutory Notice Boxes -->
+          <div id="tax-error-box"
+            class="hidden mt-5 rounded-2xl bg-error-container/40 border border-error/30 px-4 py-3 text-on-error-container flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">error</span>
+            <div id="tax-error-msg" class="font-body-sm text-body-sm space-y-0.5"></div>
+          </div>
+          <div id="tax-warning-box"
+            class="hidden mt-4 rounded-2xl bg-tertiary-fixed/40 border border-tertiary/20 px-4 py-3 text-on-surface flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-tertiary text-[20px] shrink-0 mt-0.5">info</span>
+            <div id="tax-warning-msg" class="font-body-sm text-body-sm space-y-0.5"></div>
+          </div>
+
+          <!-- Actions Strip -->
+          <div
+            class="mt-8 pt-6 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+              <span class="material-symbols-outlined text-[18px] text-primary">gavel</span>
+              <span>Informational estimates per Income-tax Act, 2025 &amp; Finance Act, 2026 (Sec 288A/288B
+                rounded).</span>
+            </div>
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                class="w-1/2 sm:w-auto px-5 py-3 rounded-xl font-label-lg text-label-lg font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+                id="btn-reset" type="button">
+                <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                <span>Reset</span>
+              </button>
+              <button
+                class="w-1/2 sm:w-auto px-7 py-3 rounded-xl font-label-lg text-label-lg font-semibold bg-primary hover:bg-primary-container text-on-primary shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+                id="btn-calculate" type="button">
+                <span class="material-symbols-outlined text-[18px]">flash_on</span>
+                <span>Calculate Tax</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recommendation Outcome Banner -->
+        <div id="tax-outcome-banner"
+          class="bg-surface-container-low rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 mb-6 shadow-sm">
+          <div class="flex items-center gap-3.5">
+            <div
+              class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shrink-0 shadow-sm">
+              <span class="material-symbols-outlined text-[24px]">recommend</span>
+            </div>
+            <div>
+              <p id="banner-recommendation-title"
+                class="font-headline-sm text-headline-sm text-on-surface font-bold flex flex-wrap items-center gap-1.5 tnum">
+                Enter your annual income and click Calculate Tax to compare regimes.
+              </p>
+              <p id="banner-recommendation-subtitle" class="font-body-sm text-body-sm text-on-surface-variant">
+                No default tax figures are pre-filled; select a preset salary or enter your own values above.</p>
+            </div>
+          </div>
+          <div class="hidden md:flex flex-col text-right shrink-0">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Benefit
+              Spread</span>
+            <span id="banner-benefit-spread" class="font-label-lg text-label-lg text-primary font-bold tnum">—</span>
+          </div>
+        </div>
+
+        <!-- Side-by-Side Regime Comparison Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <!-- Card A: New Tax Regime -->
+          <div id="card-new-regime"
+            class="relative bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col justify-between overflow-hidden transition-all">
+            <div id="new-card-topbar" class="absolute top-0 left-0 right-0 h-1.5 bg-outline-variant"></div>
+            <div id="new-card-glow"
+              class="hidden absolute -right-8 -top-8 w-24 h-24 bg-primary/10 rounded-full blur-xl pointer-events-none">
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-headline-sm text-headline-sm text-on-surface font-bold">New Tax Regime</span>
+                  <span id="new-recommended-badge"
+                    class="hidden font-label-sm text-label-sm bg-primary text-on-primary font-semibold px-2.5 py-0.5 rounded-full items-center gap-1">
+                    <span class="material-symbols-outlined text-[13px]">check</span> Recommended
+                  </span>
+                  <span id="new-alt-badge"
+                    class="font-label-sm text-label-sm bg-surface-container text-on-surface-variant font-medium px-2.5 py-0.5 rounded-full">
+                    Default Regime
+                  </span>
+                </div>
+                <span class="font-label-sm text-label-sm text-on-surface-variant">Sec 202 / 115BAC</span>
+              </div>
+
+              <div class="bg-surface-container-low rounded-2xl p-4 mb-5">
+                <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">Total
+                  Tax Liability (Inc. Cess)</span>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span class="font-display-hero text-2xl sm:text-headline-lg text-primary font-bold tnum"
+                    id="new-total-tax">—</span>
+                  <span class="font-body-sm text-body-sm text-on-surface-variant">/ annum</span>
+                </div>
+              </div>
+
+              <!-- Metric details -->
+              <div class="space-y-3 font-body-md text-body-md">
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Net Taxable Income</span>
+                  <span class="font-semibold text-on-surface tnum" id="new-taxable-income">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Standard &amp; 80CCD(2) Deductions</span>
+                  <span class="font-semibold text-on-surface tnum" id="new-std-ded">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Tax Before Rebate (Slab)</span>
+                  <span class="font-semibold text-on-surface tnum" id="new-prerebate-tax">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Rebate 87A / 156 &amp; Relief</span>
+                  <span class="font-semibold text-primary tnum" id="new-rebate-amount">—</span>
+                </div>
+                <div id="new-cg-row"
+                  class="hidden justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Capital Gains Tax (111A/112A)</span>
+                  <span class="font-semibold text-on-surface tnum" id="new-cg-tax">—</span>
+                </div>
+                <div id="new-surcharge-row"
+                  class="hidden justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Surcharge (After Relief)</span>
+                  <span class="font-semibold text-tertiary tnum" id="new-surcharge-amount">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">4% Health &amp; Education Cess</span>
+                  <span class="font-semibold text-on-surface tnum" id="new-cess-amount">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Monthly Tax Est. / Effective Rate</span>
+                  <span class="font-semibold text-on-surface tnum"><span id="new-monthly-tax">—</span> (<span
+                      id="new-effective-rate">—</span>)</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5">
+                  <span class="text-on-surface-variant">Estimated Monthly Take-Home</span>
+                  <span class="font-headline-sm text-headline-sm text-primary font-bold tnum"
+                    id="new-monthly-inhand">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Visual Metric Meter -->
+            <div class="mt-6 pt-5 border-t border-outline-variant/20">
+              <div class="flex justify-between text-label-sm font-label-sm text-on-surface-variant mb-1.5">
+                <span>Net Take-home Efficiency</span>
+                <span id="new-efficiency-pct" class="font-semibold text-primary tnum">—</span>
+              </div>
+              <div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
+                <div id="new-efficiency-bar" class="bg-primary h-full rounded-full transition-all duration-500"
+                  style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card B: Old Tax Regime -->
+          <div id="card-old-regime"
+            class="relative bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col justify-between overflow-hidden transition-all">
+            <div id="old-card-topbar" class="absolute top-0 left-0 right-0 h-1.5 bg-outline-variant"></div>
+            <div id="old-card-glow"
+              class="hidden absolute -right-8 -top-8 w-24 h-24 bg-primary/10 rounded-full blur-xl pointer-events-none">
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-headline-sm text-headline-sm text-on-surface font-bold">Old Tax Regime</span>
+                  <span id="old-recommended-badge"
+                    class="hidden font-label-sm text-label-sm bg-primary text-on-primary font-semibold px-2.5 py-0.5 rounded-full items-center gap-1">
+                    <span class="material-symbols-outlined text-[13px]">check</span> Recommended
+                  </span>
+                  <span id="old-alt-badge"
+                    class="font-label-sm text-label-sm bg-surface-container text-on-surface-variant font-medium px-2.5 py-0.5 rounded-full">
+                    Deduction Heavy
+                  </span>
+                </div>
+                <span class="font-label-sm text-label-sm text-on-surface-variant">Optional Old System</span>
+              </div>
+
+              <div class="bg-surface-container-low rounded-2xl p-4 mb-5">
+                <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">Total
+                  Tax Liability (Inc. Cess)</span>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span class="font-display-hero text-2xl sm:text-headline-lg text-on-surface font-bold tnum"
+                    id="old-total-tax">—</span>
+                  <span class="font-body-sm text-body-sm text-on-surface-variant">/ annum</span>
+                </div>
+              </div>
+
+              <!-- Metric details -->
+              <div class="space-y-3 font-body-md text-body-md">
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Net Taxable Income</span>
+                  <span class="font-semibold text-on-surface tnum" id="old-taxable-income">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Total Eligible Deductions</span>
+                  <span class="font-semibold text-on-surface tnum" id="old-deductions-claimed">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Tax Before Rebate (Slab)</span>
+                  <span class="font-semibold text-on-surface tnum" id="old-prerebate-tax">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Rebate 87A (Max ₹12.5k &le; ₹5L)</span>
+                  <span class="font-semibold text-primary tnum" id="old-rebate-amount">—</span>
+                </div>
+                <div id="old-cg-row"
+                  class="hidden justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Capital Gains Tax (111A/112A)</span>
+                  <span class="font-semibold text-on-surface tnum" id="old-cg-tax">—</span>
+                </div>
+                <div id="old-surcharge-row"
+                  class="hidden justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Surcharge (After Relief)</span>
+                  <span class="font-semibold text-tertiary tnum" id="old-surcharge-amount">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">4% Health &amp; Education Cess</span>
+                  <span class="font-semibold text-on-surface tnum" id="old-cess-amount">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Monthly Tax Est. / Effective Rate</span>
+                  <span class="font-semibold text-on-surface tnum"><span id="old-monthly-tax">—</span> (<span
+                      id="old-effective-rate">—</span>)</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5">
+                  <span class="text-on-surface-variant">Estimated Monthly Take-Home</span>
+                  <span class="font-headline-sm text-headline-sm text-on-surface font-bold tnum"
+                    id="old-monthly-inhand">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Visual Metric Meter -->
+            <div class="mt-6 pt-5 border-t border-outline-variant/20">
+              <div class="flex justify-between text-label-sm font-label-sm text-on-surface-variant mb-1.5">
+                <span>Net Take-home Efficiency</span>
+                <span id="old-efficiency-pct" class="font-semibold text-on-surface tnum">—</span>
+              </div>
+              <div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
+                <div id="old-efficiency-bar" class="bg-outline h-full rounded-full transition-all duration-500"
+                  style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Tax Slabs & Deductions Breakdown (Accordion) -->
+        <div class="bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-sm mb-8">
+          <button class="w-full flex items-center justify-between text-left group gap-3" id="toggle-slabs" type="button"
+            aria-expanded="false">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:bg-primary/10 group-hover:text-primary transition-colors shrink-0">
+                <span class="material-symbols-outlined text-[20px]">table_rows</span>
+              </div>
+              <div>
+                <h3 id="slab-accordion-title" class="font-headline-sm text-headline-sm text-on-surface">Marginal Tax
+                  Slab Schedules &amp; Deductions Breakdown (Tax Year 2026–27)</h3>
+                <p class="font-body-sm text-body-sm text-on-surface-variant">View progressive slab-by-slab tax
+                  calculations, rebate/marginal relief, and Chapter VI-A deduction summary</p>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-on-surface-variant transition-transform duration-300 shrink-0"
+              id="accordion-arrow">expand_more</span>
+          </button>
+
+          <div class="mt-6 hidden space-y-6" id="slabs-table-container">
+            <!-- Dynamic Computed Slab Breakdown -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left font-body-sm text-body-sm min-w-[600px]">
+                <thead>
+                  <tr class="bg-surface-container-low text-on-surface font-semibold font-label-md text-label-md">
+                    <th class="py-3 px-4 rounded-l-xl">Income Slab (New Regime)</th>
+                    <th class="py-3 px-4">Rate</th>
+                    <th class="py-3 px-4 text-right">Taxable in Slab</th>
+                    <th class="py-3 px-4 text-right rounded-r-xl">Your New Regime Tax</th>
+                  </tr>
+                </thead>
+                <tbody id="new-slab-tbody" class="divide-y divide-surface-container tnum"></tbody>
+              </table>
+            </div>
+
+            <!-- Old Regime Slab & Deduction Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-surface-container-low/70 rounded-2xl p-4">
+                <h4 class="font-label-lg text-label-lg text-on-surface mb-3 flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-primary text-[18px]">layers</span>
+                  <span>Old Regime Slab Breakdown</span>
+                </h4>
+                <div id="old-slab-breakdown-list" class="space-y-2 text-body-sm tnum"></div>
+              </div>
+              <div class="bg-surface-container-low/70 rounded-2xl p-4">
+                <h4 class="font-label-lg text-label-lg text-on-surface mb-3 flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-primary text-[18px]">fact_check</span>
+                  <span>Statutory Deductions &amp; Tax Summary</span>
+                </h4>
+                <div id="deduction-impact-list" class="space-y-2 text-body-sm tnum"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Professional Consultation & Export Action Bar -->
+        <div
+          class="bg-surface-container-low rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 no-print">
+          <div class="flex items-center gap-4 w-full md:w-auto">
+            <div class="w-12 h-12 rounded-2xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[26px]">assignment_turned_in</span>
+            </div>
+            <div>
+              <p class="font-headline-sm text-headline-sm text-on-surface">Export A4 Tax Computation Sheet</p>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Download printable A4 PDF or formatted Word
+                (DOCX) statement for Tax Year 2026–27.</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
+            <button id="btn-tax-pdf"
+              class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-label-md text-label-md font-semibold bg-surface-container-lowest hover:bg-surface-container text-on-surface transition-all flex items-center justify-center gap-1.5 shadow-sm"
+              type="button">
+              <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+              <span>A4 PDF</span>
+            </button>
+            <button id="btn-tax-docx"
+              class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-label-md text-label-md font-semibold bg-surface-container-lowest hover:bg-surface-container text-on-surface transition-all flex items-center justify-center gap-1.5 shadow-sm"
+              type="button">
+              <span class="material-symbols-outlined text-[18px]">article</span>
+              <span>A4 DOCX</span>
+            </button>
+            <button id="btn-tax-email"
+              class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-label-md text-label-md font-semibold bg-surface-container-lowest hover:bg-surface-container text-on-surface transition-all flex items-center justify-center gap-1.5 shadow-sm"
+              type="button">
+              <span class="material-symbols-outlined text-[18px]">content_copy</span>
+              <span>Copy</span>
+            </button>
+            <button id="btn-talk-ca"
+              class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-label-md text-label-md font-semibold bg-primary hover:bg-primary-container text-on-primary transition-all flex items-center justify-center gap-2 shadow-sm"
+              type="button">
+              <span class="material-symbols-outlined text-[18px]">support_agent</span>
+              <span>Filing Checklist</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TOOL 2: GST & INVOICE CALCULATOR                                    -->
+      <!-- =================================================================== -->
+      <section id="panel-gst-calculator" data-tab-panel="gst-calculator" class="hidden flex-col w-full">
+
+        <!-- Top Utility Context Banner -->
+        <div class="relative bg-surface-container-low rounded-3xl p-6 sm:p-8 mb-6 overflow-hidden">
+          <div
+            class="absolute -right-16 -top-16 w-64 h-64 bg-secondary-fixed/40 rounded-full blur-3xl pointer-events-none">
+          </div>
+          <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-1.5 max-w-xl">
+              <div
+                class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm">
+                <span class="material-symbols-outlined text-[14px]">receipt_long</span>
+                <span>GST 2.0 Council Tariff Schedule (Post Sept 2025 Reform)</span>
+              </div>
+              <h1 class="font-headline-lg text-headline-lg-mobile sm:text-headline-lg text-on-surface tracking-tight">
+                GST &amp; Invoice Tax Calculator</h1>
+              <p class="font-body-md text-body-md text-on-surface-variant">Compute CGST, SGST, and IGST with
+                Inclusive/Exclusive pricing across GST 2.0 rates (0%, 3%, 5%, 18%, 40%) and historical pre-reform
+                brackets (12%, 28%). Always verify your item HSN/SAC code.</p>
+            </div>
+            <!-- Quick Summary Metric Chip -->
+            <div
+              class="flex items-center gap-3 bg-surface-container-lowest p-3 rounded-2xl shadow-sm self-start md:self-auto shrink-0">
+              <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-[22px]">payments</span>
+              </div>
+              <div>
+                <span class="font-label-sm text-label-sm text-on-surface-variant block uppercase tracking-wider">Total
+                  GST Liability</span>
+                <span id="gst-hero-tax" class="font-headline-sm text-headline-sm text-primary font-bold tnum">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tax Mode Segments -->
+          <div class="mt-6 pt-5 border-t border-outline-variant/20 flex flex-wrap gap-2" id="gst-mode-selector">
+            <button
+              class="gst-mode-btn active px-4 py-2 rounded-xl font-label-md text-label-md transition-all bg-primary text-on-primary font-semibold shadow-sm"
+              data-mode="exclusive" type="button">
+              GST Exclusive (+ Add GST)
+            </button>
+            <button
+              class="gst-mode-btn px-4 py-2 rounded-xl font-label-md text-label-md transition-all bg-surface-container hover:bg-surface-container-high text-on-surface"
+              data-mode="inclusive" type="button">
+              GST Inclusive (Reverse Extract GST)
+            </button>
+          </div>
+        </div>
+
+        <!-- Primary Interactive Card -->
+        <div class="bg-surface-container-lowest rounded-3xl p-6 sm:p-8 shadow-xl shadow-surface-variant/40 mb-8">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b border-outline-variant/20">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[24px]">calculate</span>
+              <h2 class="font-headline-sm text-headline-sm text-on-surface">Invoice &amp; HSN/SAC Inputs</h2>
+            </div>
+            <span
+              class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2.5 py-1 rounded-md">CGST
+              / SGST / IGST</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <!-- Amount Input -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center gap-2">
+                <label id="gst-amount-label" class="font-label-md text-label-md text-on-surface font-semibold"
+                  for="gst-amount">Net Base Amount (Excl. GST)</label>
+                <span class="font-label-sm text-label-sm text-primary font-medium shrink-0">Unit Value</span>
+              </div>
+              <div class="relative">
+                <span
+                  class="absolute left-3.5 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">₹</span>
+                <input
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-8 pr-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+                  id="gst-amount" min="0" step="100" type="number" value="" placeholder="e.g. 100000" />
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                <span class="font-label-sm text-label-sm text-on-surface-variant">Presets:</span>
+                <button
+                  class="gst-preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-val="10000" type="button">₹10K</button>
+                <button
+                  class="gst-preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-val="50000" type="button">₹50K</button>
+                <button
+                  class="gst-preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-val="100000" type="button">₹1L</button>
+                <button
+                  class="gst-preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-val="500000" type="button">₹5L</button>
+                <button
+                  class="gst-preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-val="1000000" type="button">₹10L</button>
+              </div>
+            </div>
+
+            <!-- Units & Supply Type -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center gap-2">
+                <label class="font-label-md text-label-md text-on-surface font-semibold" for="gst-quantity">Quantity /
+                  Line Units</label>
+                <span class="font-label-sm text-label-sm text-on-surface-variant shrink-0">Multiplier</span>
+              </div>
+              <div class="grid grid-cols-3 gap-3">
+                <div class="relative col-span-1">
+                  <input
+                    class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal px-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+                    id="gst-quantity" min="1" step="1" type="number" value="" placeholder="1" />
+                </div>
+                <div class="col-span-2 grid grid-cols-2 gap-2 bg-surface-container-low p-1 rounded-xl"
+                  id="gst-supply-selector">
+                  <button type="button" data-supply="intra"
+                    class="gst-supply-btn px-2.5 py-2 rounded-lg font-label-md text-label-md font-semibold bg-surface-container-lowest text-primary shadow-sm transition-all">
+                    Intra-State
+                  </button>
+                  <button type="button" data-supply="inter"
+                    class="gst-supply-btn px-2.5 py-2 rounded-lg font-label-md text-label-md font-medium text-on-surface-variant hover:text-on-surface transition-all">
+                    Inter-State
+                  </button>
+                </div>
+              </div>
+              <p id="gst-supply-hint" class="font-body-sm text-body-sm text-on-surface-variant">Intra-State splits GST
+                50/50 into CGST &amp; SGST</p>
+            </div>
+
+            <!-- Product / Service HSN/SAC Classification Helper -->
+            <div class="sm:col-span-2 space-y-1.5">
+              <div class="flex flex-wrap justify-between items-center gap-2">
+                <label class="font-label-md text-label-md text-on-surface font-semibold" for="gst-hsn-select">Goods /
+                  Service Category (HSN / SAC Validation)</label>
+                <span id="gst-hsn-code-badge"
+                  class="font-label-sm text-label-sm text-secondary font-semibold bg-secondary-fixed/50 px-2 py-0.5 rounded">SAC
+                  9983 / General</span>
+              </div>
+              <select id="gst-hsn-select"
+                class="w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface px-4 py-3 rounded-xl font-label-md text-label-md font-medium outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer">
+                <option value="services-it" selected>IT, SaaS, Consulting &amp; Professional Services — SAC 9983 (18%
+                  Standard)</option>
+                <option value="electronics-capital">Electronics, Appliances &amp; B2B Goods — HSN 84/85 (18% Standard)
+                </option>
+                <option value="essentials-packaged">Essential Packaged Food, Hotels (&le;₹7.5k), Apparel — HSN
+                  04/21/61/62 (5% Merit)</option>
+                <option value="exempt-essentials">Unpacked Grains, Fresh Produce, Healthcare, Education — HSN 07/10 /
+                  SAC 9992/9993 (0% Exempt)</option>
+                <option value="bullion-jewellery">Gold, Silver &amp; Cut Precious Jewellery — HSN 7108/7113 (3% Special)
+                </option>
+                <option value="luxury-demerit">Aerated Sugary Drinks, Sin &amp; Super-Luxury Goods — HSN 2202/24/87 (40%
+                  Demerit)</option>
+                <option value="historical-12">Pre-Sept 2025 Legacy 12% Bracket Reference — Historical (12%)</option>
+                <option value="historical-28">Pre-Sept 2025 Legacy 28% Bracket Reference — Historical (28%)</option>
+              </select>
+              <p id="gst-hsn-note" class="font-body-sm text-body-sm text-on-surface-variant">Standard GST 2.0 rate for
+                most commercial services and software subscriptions (SAC 9983). Verify latest CBIC notifications before
+                filing GSTR-1.</p>
+            </div>
+
+            <!-- Dynamic GST Slab Rate Selector -->
+            <div class="sm:col-span-2 space-y-2 pt-1">
+              <div class="flex flex-wrap justify-between items-center gap-2">
+                <span class="font-label-md text-label-md text-on-surface font-semibold">Select GST Tax Slab</span>
+                <span id="gst-selected-slab-badge" class="font-label-sm text-label-sm text-primary font-semibold">18%
+                  Standard Slab (Services / Electronics)</span>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5" id="gst-slab-selector">
+                <button type="button" data-rate="0" data-desc="0% Exempt Goods &amp; Core Services"
+                  class="gst-slab-btn text-left p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all border border-transparent">
+                  <span class="font-headline-sm text-headline-sm font-bold text-on-surface block tnum">0%</span>
+                  <span class="font-body-sm text-body-sm text-on-surface-variant block">Exempt</span>
+                </button>
+                <button type="button" data-rate="3" data-desc="3% Special Slab (Gold &amp; Jewellery)"
+                  class="gst-slab-btn text-left p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all border border-transparent">
+                  <span class="font-headline-sm text-headline-sm font-bold text-on-surface block tnum">3%</span>
+                  <span class="font-body-sm text-body-sm text-on-surface-variant block">1.5% + 1.5%</span>
+                </button>
+                <button type="button" data-rate="5" data-desc="5% Merit Slab (Essentials)"
+                  class="gst-slab-btn text-left p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all border border-transparent">
+                  <span class="font-headline-sm text-headline-sm font-bold text-on-surface block tnum">5%</span>
+                  <span class="font-body-sm text-body-sm text-on-surface-variant block">2.5% + 2.5%</span>
+                </button>
+                <button type="button" data-rate="18" data-desc="18% Standard Slab (Services / IT)"
+                  class="gst-slab-btn active text-left p-3 rounded-2xl bg-primary text-on-primary shadow-md shadow-primary/15 transition-all border border-primary">
+                  <span class="font-headline-sm text-headline-sm font-bold block tnum">18%</span>
+                  <span class="font-body-sm text-body-sm text-on-primary/85 block">9% + 9%</span>
+                </button>
+                <button type="button" data-rate="40" data-desc="40% Luxury / Demerit Slab (GST 2.0)"
+                  class="gst-slab-btn text-left p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all border border-transparent">
+                  <span class="font-headline-sm text-headline-sm font-bold text-on-surface block tnum">40%</span>
+                  <span class="font-body-sm text-body-sm text-on-surface-variant block">20% + 20%</span>
+                </button>
+                <button type="button" data-rate="12" data-desc="12% Legacy Pre-Reform Reference"
+                  class="gst-slab-btn text-left p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all border border-dashed border-outline-variant">
+                  <span class="font-headline-sm text-headline-sm font-bold text-on-surface block tnum">12%</span>
+                  <span class="font-body-sm text-[11px] text-on-surface-variant block">Legacy Ref</span>
+                </button>
+                <button type="button" data-rate="28" data-desc="28% Legacy Pre-Reform Reference"
+                  class="gst-slab-btn text-left p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-all border border-dashed border-outline-variant">
+                  <span class="font-headline-sm text-headline-sm font-bold text-on-surface block tnum">28%</span>
+                  <span class="font-body-sm text-[11px] text-on-surface-variant block">Legacy Ref</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-Time Validation Error Box -->
+          <div id="gst-error-box"
+            class="hidden mt-5 rounded-2xl bg-error-container/40 border border-error/30 px-4 py-3 text-on-error-container flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">error</span>
+            <div id="gst-error-msg" class="font-body-sm text-body-sm"></div>
+          </div>
+
+          <!-- Actions Strip -->
+          <div
+            class="mt-8 pt-6 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+              <span class="material-symbols-outlined text-[18px] text-primary">gavel</span>
+              <span>Precision to ₹0.01; verify HSN/SAC notifications on cbic-gst.gov.in before filing.</span>
+            </div>
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                class="w-1/2 sm:w-auto px-5 py-3 rounded-xl font-label-lg text-label-lg font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+                id="btn-gst-reset" type="button">
+                <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                <span>Reset</span>
+              </button>
+              <button
+                class="w-1/2 sm:w-auto px-7 py-3 rounded-xl font-label-lg text-label-lg font-semibold bg-primary hover:bg-primary-container text-on-primary shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+                id="btn-gst-calculate" type="button">
+                <span class="material-symbols-outlined text-[18px]">flash_on</span>
+                <span>Calculate GST</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- GST Outcome Highlight Banner -->
+        <div id="gst-outcome-banner"
+          class="bg-surface-container-low rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 mb-6 shadow-sm">
+          <div class="flex items-center gap-3.5">
+            <div
+              class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shrink-0 shadow-sm">
+              <span class="material-symbols-outlined text-[22px]">description</span>
+            </div>
+            <div>
+              <p id="gst-banner-title"
+                class="font-headline-sm text-headline-sm text-on-surface font-bold flex flex-wrap items-center gap-1.5 tnum">
+                Enter taxable value and click Calculate GST.
+              </p>
+              <p id="gst-banner-subtitle" class="font-body-sm text-body-sm text-on-surface-variant tnum">Select HSN/SAC
+                category, supply type, and GST rate above.</p>
+            </div>
+          </div>
+          <div class="hidden md:flex flex-col text-right shrink-0">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">GST Tax
+              Share</span>
+            <span id="gst-banner-share" class="font-label-lg text-label-lg text-primary font-bold tnum">—</span>
+          </div>
+        </div>
+
+        <!-- Side-by-Side GST Result Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <!-- Card A: Invoice Summary -->
+          <div
+            class="relative bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-lg shadow-surface-variant/30 flex flex-col justify-between overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-primary"></div>
+            <div class="absolute -right-8 -top-8 w-24 h-24 bg-primary/10 rounded-full blur-xl pointer-events-none">
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div class="flex items-center gap-2">
+                  <span class="font-headline-sm text-headline-sm text-on-surface font-bold">Invoice Summary</span>
+                  <span id="gst-mode-pill"
+                    class="font-label-sm text-label-sm bg-primary text-on-primary font-semibold px-2.5 py-0.5 rounded-full">Exclusive</span>
+                </div>
+                <span class="font-label-sm text-label-sm text-on-surface-variant">Final Billing</span>
+              </div>
+
+              <div class="bg-surface-container-low rounded-2xl p-4 mb-5">
+                <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">Total
+                  Invoice Payable</span>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span id="gst-gross-total"
+                    class="font-display-hero text-2xl sm:text-headline-lg text-primary font-bold tnum">—</span>
+                  <span id="gst-units-suffix" class="font-body-sm text-body-sm text-on-surface-variant"></span>
+                </div>
+              </div>
+
+              <div class="space-y-3 font-body-md text-body-md">
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Net Taxable Base Value</span>
+                  <span id="gst-net-base" class="font-semibold text-on-surface tnum">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span id="gst-slab-label" class="text-on-surface-variant">Total GST (@ 18%)</span>
+                  <span id="gst-total-tax" class="font-semibold text-primary tnum">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Per-Unit Gross Price</span>
+                  <span id="gst-per-unit" class="font-semibold text-on-surface tnum">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5">
+                  <span class="text-on-surface-variant">Tax Share of Gross Total</span>
+                  <span id="gst-effective-share" class="font-semibold text-on-surface tnum">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Visual Split Meter -->
+            <div class="mt-6 pt-5 border-t border-outline-variant/20">
+              <div class="flex justify-between text-label-sm font-label-sm text-on-surface-variant mb-1.5 tnum">
+                <span>Base Value vs GST Share</span>
+                <span id="gst-base-pct-label" class="font-semibold text-primary">—</span>
+              </div>
+              <div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden flex">
+                <div id="gst-base-bar" class="bg-primary h-full transition-all duration-500" style="width: 0%;">
+                </div>
+                <div id="gst-tax-bar" class="bg-secondary h-full transition-all duration-500" style="width: 0%;">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card B: CGST / SGST / IGST Split Breakdown -->
+          <div
+            class="relative bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col justify-between overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-secondary"></div>
+            <div>
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div class="flex items-center gap-2">
+                  <span class="font-headline-sm text-headline-sm text-on-surface font-bold">Tax Split Breakdown</span>
+                  <span id="gst-split-badge"
+                    class="font-label-sm text-label-sm bg-secondary-fixed text-on-secondary-fixed font-semibold px-2.5 py-0.5 rounded-full">CGST
+                    + SGST</span>
+                </div>
+                <span class="font-label-sm text-label-sm text-on-surface-variant">Govt. Remittance</span>
+              </div>
+
+              <div class="bg-surface-container-low rounded-2xl p-4 mb-5">
+                <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">Total
+                  GST Component</span>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span id="gst-split-total"
+                    class="font-display-hero text-2xl sm:text-headline-lg text-on-surface font-bold tnum">—</span>
+                  <span id="gst-split-rate-tag" class="font-body-sm text-body-sm text-on-surface-variant">@ 18%
+                    Slab</span>
+                </div>
+              </div>
+
+              <div class="space-y-3 font-body-md text-body-md">
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span id="gst-cgst-label" class="text-on-surface-variant">Central GST (CGST @ 9%)</span>
+                  <span id="gst-cgst-val" class="font-semibold text-on-surface tnum">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span id="gst-sgst-label" class="text-on-surface-variant">State GST (SGST @ 9%)</span>
+                  <span id="gst-sgst-val" class="font-semibold text-on-surface tnum">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span id="gst-igst-label" class="text-on-surface-variant">Integrated GST (IGST @ 0%)</span>
+                  <span id="gst-igst-val" class="font-semibold text-outline tnum">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5">
+                  <span class="text-on-surface-variant">Supply Classification</span>
+                  <span id="gst-supply-display" class="font-semibold text-secondary">Intra-State Supply</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Visual CGST vs SGST / IGST Meter -->
+            <div class="mt-6 pt-5 border-t border-outline-variant/20">
+              <div class="flex justify-between text-label-sm font-label-sm text-on-surface-variant mb-1.5 tnum">
+                <span>Central vs State Allocation</span>
+                <span id="gst-split-pct-label" class="font-semibold text-secondary">—</span>
+              </div>
+              <div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden flex">
+                <div id="gst-cgst-bar" class="bg-primary h-full transition-all duration-500" style="width: 0%;"></div>
+                <div id="gst-sgst-bar" class="bg-secondary h-full transition-all duration-500" style="width: 0%;">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Expandable GST Multi-Slab Comparison Accordion -->
+        <div class="bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-sm mb-8">
+          <button class="w-full flex items-center justify-between text-left group gap-3" id="toggle-gst-matrix"
+            type="button" aria-expanded="false">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:bg-primary/10 group-hover:text-primary transition-colors shrink-0">
+                <span class="material-symbols-outlined text-[20px]">grid_on</span>
+              </div>
+              <div>
+                <h3 class="font-headline-sm text-headline-sm text-on-surface">All GST Slabs Matrix (0%, 3%, 5%, 18%, 40%
+                  &amp; Legacy 12%/28%)
+                </h3>
+                <p class="font-body-sm text-body-sm text-on-surface-variant">Compare CGST, SGST, IGST &amp; final
+                  invoice value across GST 2.0 and legacy brackets</p>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-on-surface-variant transition-transform duration-300 shrink-0"
+              id="gst-accordion-arrow">expand_more</span>
+          </button>
+
+          <div class="mt-6 overflow-x-auto hidden" id="gst-matrix-container">
+            <table class="w-full text-left font-body-sm text-body-sm min-w-[660px]">
+              <thead>
+                <tr class="bg-surface-container-low text-on-surface font-semibold font-label-md text-label-md">
+                  <th class="py-3 px-4 rounded-l-xl">GST Slab</th>
+                  <th class="py-3 px-4 text-right">Net Base Value</th>
+                  <th class="py-3 px-4 text-right">CGST (50%)</th>
+                  <th class="py-3 px-4 text-right">SGST (50%)</th>
+                  <th class="py-3 px-4 text-right">IGST</th>
+                  <th class="py-3 px-4 text-right">Total GST</th>
+                  <th class="py-3 px-4 text-right rounded-r-xl">Invoice Total</th>
+                </tr>
+              </thead>
+              <tbody id="gst-matrix-tbody" class="divide-y divide-surface-container tnum"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Export / Copy Action Strip -->
+        <div
+          class="bg-surface-container-low rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[22px]">content_paste</span>
+            </div>
+            <div>
+              <p class="font-headline-sm text-headline-sm text-on-surface">Ready for GST Billing?</p>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Copy the formatted CGST/SGST breakdown
+                directly into your invoice or email.</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
+            <button id="btn-gst-pdf" type="button"
+              class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-label-md text-label-md font-semibold bg-surface-container-lowest hover:bg-surface-container text-on-surface transition-all flex items-center justify-center gap-1.5 shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+              <span>A4 PDF</span>
+            </button>
+            <button id="btn-gst-docx" type="button"
+              class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-label-md text-label-md font-semibold bg-surface-container-lowest hover:bg-surface-container text-on-surface transition-all flex items-center justify-center gap-1.5 shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">article</span>
+              <span>A4 DOCX</span>
+            </button>
+            <button id="btn-gst-copy" type="button"
+              class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-label-md text-label-md font-semibold bg-primary hover:bg-primary-container text-on-primary transition-all flex items-center justify-center gap-1.5 shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">content_copy</span>
+              <span>Copy Breakdown</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TOOL 3: SIP & MUTUAL FUND WEALTH PLANNER                            -->
+      <!-- =================================================================== -->
+      <section id="panel-sip-mutual-fund" data-tab-panel="sip-mutual-fund" class="hidden flex-col w-full">
+
+        <!-- Top Utility Context Banner -->
+        <div class="relative bg-surface-container-low rounded-3xl p-6 sm:p-8 mb-6 overflow-hidden">
+          <div
+            class="absolute -right-16 -top-16 w-64 h-64 bg-primary-fixed/35 rounded-full blur-3xl pointer-events-none">
+          </div>
+          <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-1.5 max-w-xl">
+              <div
+                class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm">
+                <span class="material-symbols-outlined text-[14px]">trending_up</span>
+                <span>Monthly Compounding Wealth Engine</span>
+              </div>
+              <h1 class="font-headline-lg text-headline-lg-mobile sm:text-headline-lg text-on-surface tracking-tight">
+                SIP &amp; Mutual Fund Planner</h1>
+              <p class="font-body-md text-body-md text-on-surface-variant">Project long-term mutual fund wealth creation
+                with monthly SIP compounding, step-up growth, interactive year-wise growth chart, and maturity
+                schedules.</p>
+            </div>
+            <!-- Quick Summary Metric Chip -->
+            <div
+              class="flex items-center gap-3 bg-surface-container-lowest p-3 rounded-2xl shadow-sm self-start md:self-auto shrink-0">
+              <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-[22px]">account_balance_wallet</span>
+              </div>
+              <div>
+                <span
+                  class="font-label-sm text-label-sm text-on-surface-variant block uppercase tracking-wider">Projected
+                  Maturity</span>
+                <span id="sip-hero-maturity"
+                  class="font-headline-sm text-headline-sm text-primary font-bold tnum">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Investment Mode Segments -->
+          <div class="mt-6 pt-5 border-t border-outline-variant/20 flex flex-wrap gap-2" id="sip-mode-selector">
+            <button
+              class="sip-mode-btn active px-4 py-2 rounded-xl font-label-md text-label-md transition-all bg-primary text-on-primary font-semibold shadow-sm"
+              data-mode="sip" type="button">
+              Monthly SIP
+            </button>
+            <button
+              class="sip-mode-btn px-4 py-2 rounded-xl font-label-md text-label-md transition-all bg-surface-container hover:bg-surface-container-high text-on-surface"
+              data-mode="lumpsum" type="button">
+              Lumpsum One-Time
+            </button>
+          </div>
+        </div>
+
+        <!-- Primary Interactive Card -->
+        <div class="bg-surface-container-lowest rounded-3xl p-6 sm:p-8 shadow-xl shadow-surface-variant/40 mb-8">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b border-outline-variant/20">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[24px]">monitoring</span>
+              <h2 class="font-headline-sm text-headline-sm text-on-surface">SIP &amp; Compounding Parameters</h2>
+            </div>
+            <span id="sip-mode-badge"
+              class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2.5 py-1 rounded-md">Monthly
+              Compounding</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <!-- Monthly Investment / Lumpsum Amount -->
+            <div class="space-y-2.5">
+              <div class="flex justify-between items-center gap-2">
+                <label id="sip-amount-label" class="font-label-md text-label-md text-on-surface font-semibold"
+                  for="sip-amount">Monthly SIP Investment</label>
+                <span class="font-label-sm text-label-sm text-primary font-medium shrink-0">Contribution</span>
+              </div>
+              <div class="relative">
+                <span
+                  class="absolute left-3.5 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">₹</span>
+                <input
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-8 pr-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+                  id="sip-amount" min="100" step="500" type="number" value="" placeholder="e.g. 10000" />
+              </div>
+              <input id="sip-amount-range" type="range" min="500" max="200000" step="500" value="500"
+                class="bharat-slider" aria-label="SIP Investment Slider" />
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="font-label-sm text-label-sm text-on-surface-variant">Presets:</span>
+                <button
+                  class="sip-preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-val="5000" type="button">₹5K</button>
+                <button
+                  class="sip-preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-val="10000" type="button">₹10K</button>
+                <button
+                  class="sip-preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-val="25000" type="button">₹25K</button>
+                <button
+                  class="sip-preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-val="50000" type="button">₹50K</button>
+                <button
+                  class="sip-preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-val="100000" type="button">₹1L</button>
+              </div>
+            </div>
+
+            <!-- Expected Return Rate -->
+            <div class="space-y-2.5">
+              <div class="flex justify-between items-center gap-2">
+                <label class="font-label-md text-label-md text-on-surface font-semibold" for="sip-rate">Expected Annual
+                  Return (CAGR)</label>
+                <span class="font-label-sm text-label-sm text-on-surface-variant shrink-0">0.5% – 35% p.a.</span>
+              </div>
+              <div class="relative">
+                <input
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-4 pr-10 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+                  id="sip-rate" min="0.5" max="35" step="0.5" type="number" value="" placeholder="e.g. 12" />
+                <span
+                  class="absolute right-4 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">%</span>
+              </div>
+              <input id="sip-rate-range" type="range" min="1" max="30" step="0.5" value="1" class="bharat-slider"
+                aria-label="Expected Annual Return Slider" />
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="font-label-sm text-label-sm text-on-surface-variant">Benchmarks:</span>
+                <button
+                  class="sip-rate-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-rate="8" type="button">8% Debt</button>
+                <button
+                  class="sip-rate-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-rate="12" type="button">12% Nifty</button>
+                <button
+                  class="sip-rate-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-rate="15" type="button">15% Midcap</button>
+                <button
+                  class="sip-rate-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors"
+                  data-rate="18" type="button">18% Small</button>
+              </div>
+            </div>
+
+            <!-- Investment Tenure (Years) -->
+            <div class="space-y-2.5">
+              <div class="flex justify-between items-center gap-2">
+                <label class="font-label-md text-label-md text-on-surface font-semibold" for="sip-years">Investment Time
+                  Horizon</label>
+                <span class="font-label-sm text-label-sm text-on-surface-variant shrink-0">1 – 40 Years</span>
+              </div>
+              <div class="relative">
+                <input
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-4 pr-14 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+                  id="sip-years" min="1" max="40" step="1" type="number" value="" placeholder="e.g. 10" />
+                <span
+                  class="absolute right-4 top-1/2 -translate-y-1/2 font-label-md text-label-md text-outline select-none">Yrs</span>
+              </div>
+              <input id="sip-years-range" type="range" min="1" max="40" step="1" value="1" class="bharat-slider"
+                aria-label="Investment Horizon Slider" />
+              <!-- Segmented Tenure Selector Chips -->
+              <div class="flex flex-wrap items-center gap-1.5 bg-surface-container-low p-1 rounded-xl w-fit"
+                id="sip-tenure-chips">
+                <button type="button" data-years="1"
+                  class="sip-tenure-chip px-2.5 py-1 rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-all">1Y</button>
+                <button type="button" data-years="3"
+                  class="sip-tenure-chip px-2.5 py-1 rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-all">3Y</button>
+                <button type="button" data-years="5"
+                  class="sip-tenure-chip px-2.5 py-1 rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-all">5Y</button>
+                <button type="button" data-years="10"
+                  class="sip-tenure-chip px-2.5 py-1 rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-all">10Y</button>
+                <button type="button" data-years="15"
+                  class="sip-tenure-chip px-2.5 py-1 rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-all">15Y</button>
+                <button type="button" data-years="20"
+                  class="sip-tenure-chip px-2.5 py-1 rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-all">20Y</button>
+              </div>
+            </div>
+
+            <!-- Annual Step-Up % (SIP Only) -->
+            <div id="sip-stepup-field" class="space-y-2.5">
+              <div class="flex justify-between items-center gap-2">
+                <label class="font-label-md text-label-md text-on-surface font-semibold" for="sip-stepup">Annual SIP
+                  Step-Up (Optional)</label>
+                <span class="font-label-sm text-label-sm text-on-surface-variant shrink-0">Yearly Increment</span>
+              </div>
+              <div class="relative">
+                <input
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-4 pr-16 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+                  id="sip-stepup" min="0" max="50" step="1" type="number" value="" placeholder="0" />
+                <span
+                  class="absolute right-4 top-1/2 -translate-y-1/2 font-label-md text-label-md text-outline select-none">%
+                  / yr</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                <span class="font-label-sm text-label-sm text-on-surface-variant">Step-Up:</span>
+                <button type="button" data-stepup="0"
+                  class="sip-stepup-btn px-2.5 py-1 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors">0%
+                  Flat</button>
+                <button type="button" data-stepup="5"
+                  class="sip-stepup-btn px-2.5 py-1 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors">+5%</button>
+                <button type="button" data-stepup="10"
+                  class="sip-stepup-btn px-2.5 py-1 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors">+10%</button>
+                <button type="button" data-stepup="15"
+                  class="sip-stepup-btn px-2.5 py-1 rounded-lg bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors">+15%</button>
+              </div>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Automatically increase your SIP every year as
+                your income grows</p>
+            </div>
+          </div>
+
+          <!-- Real-Time Validation Error Box -->
+          <div id="sip-error-box"
+            class="hidden mt-5 rounded-2xl bg-error-container/40 border border-error/30 px-4 py-3 text-on-error-container flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">error</span>
+            <div id="sip-error-msg" class="font-body-sm text-body-sm"></div>
+          </div>
+
+          <!-- Actions Strip -->
+          <div
+            class="mt-8 pt-6 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+              <span class="material-symbols-outlined text-[18px] text-primary">insights</span>
+              <span>Returns assume compounding at start of each monthly SIP installment.</span>
+            </div>
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                class="w-1/2 sm:w-auto px-5 py-3 rounded-xl font-label-lg text-label-lg font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+                id="btn-sip-reset" type="button">
+                <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                <span>Reset</span>
+              </button>
+              <button
+                class="w-1/2 sm:w-auto px-7 py-3 rounded-xl font-label-lg text-label-lg font-semibold bg-primary hover:bg-primary-container text-on-primary shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+                id="btn-sip-calculate" type="button">
+                <span class="material-symbols-outlined text-[18px]">flash_on</span>
+                <span>Calculate Returns</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wealth Outcome Highlight Banner -->
+        <div id="sip-outcome-banner"
+          class="bg-surface-container-low rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 mb-6 shadow-sm">
+          <div class="flex items-center gap-3.5">
+            <div
+              class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shrink-0 shadow-sm">
+              <span class="material-symbols-outlined text-[24px]">auto_graph</span>
+            </div>
+            <div>
+              <p id="sip-banner-title"
+                class="font-headline-sm text-headline-sm text-on-surface font-bold flex flex-wrap items-center gap-1.5 tnum">
+                Enter investment parameters and click Calculate Returns.
+              </p>
+              <p id="sip-banner-subtitle" class="font-body-sm text-body-sm text-on-surface-variant tnum">Choose Monthly
+                SIP or Lumpsum mode above to begin.</p>
+            </div>
+          </div>
+          <div class="hidden md:flex flex-col text-right shrink-0">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Wealth
+              Multiplier</span>
+            <span id="sip-banner-multiplier" class="font-label-lg text-label-lg text-primary font-bold tnum">—</span>
+          </div>
+        </div>
+
+        <!-- Side-by-Side SIP Result Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <!-- Card A: Total Maturity Value & Summary -->
+          <div
+            class="relative bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-lg shadow-surface-variant/30 flex flex-col justify-between overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-primary"></div>
+            <div class="absolute -right-8 -top-8 w-24 h-24 bg-primary/10 rounded-full blur-xl pointer-events-none">
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div class="flex items-center gap-2">
+                  <span class="font-headline-sm text-headline-sm text-on-surface font-bold">Maturity Projection</span>
+                  <span id="sip-type-pill"
+                    class="font-label-sm text-label-sm bg-primary text-on-primary font-semibold px-2.5 py-0.5 rounded-full">SIP
+                    Plan</span>
+                </div>
+                <span class="font-label-sm text-label-sm text-on-surface-variant">Compounded</span>
+              </div>
+
+              <div class="bg-surface-container-low rounded-2xl p-4 mb-5">
+                <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">Total
+                  Maturity Value</span>
+                <div class="flex items-baseline gap-2 mt-1">
+                  <span id="sip-maturity-val"
+                    class="font-display-hero text-2xl sm:text-headline-lg text-primary font-bold tnum">—</span>
+                  <span id="sip-years-suffix" class="font-body-sm text-body-sm text-on-surface-variant"></span>
+                </div>
+              </div>
+
+              <div class="space-y-3 font-body-md text-body-md">
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Total Invested Amount</span>
+                  <span id="sip-invested-val" class="font-semibold text-on-surface tnum">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Estimated Wealth Returns</span>
+                  <span id="sip-returns-val" class="font-semibold text-primary tnum">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Absolute Gain Percentage</span>
+                  <span id="sip-return-pct" class="font-semibold text-primary tnum">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5">
+                  <span class="text-on-surface-variant">Investment Duration</span>
+                  <span id="sip-tenure-display" class="font-semibold text-on-surface tnum">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Visual Metric Meter -->
+            <div class="mt-6 pt-5 border-t border-outline-variant/20">
+              <div class="flex justify-between text-label-sm font-label-sm text-on-surface-variant mb-1.5 tnum">
+                <span>Invested vs Returns Ratio</span>
+                <span id="sip-split-bar-label" class="font-semibold text-primary">—</span>
+              </div>
+              <div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden flex">
+                <div id="sip-invested-bar" class="bg-secondary h-full transition-all duration-500" style="width: 0%;">
+                </div>
+                <div id="sip-returns-bar" class="bg-primary h-full transition-all duration-500" style="width: 0%;">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card B: Corpus Allocation Donut & Real Value -->
+          <div
+            class="relative bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col justify-between overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-secondary"></div>
+            <div>
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div class="flex items-center gap-2">
+                  <span class="font-headline-sm text-headline-sm text-on-surface font-bold">Corpus Composition</span>
+                  <span
+                    class="font-label-sm text-label-sm bg-secondary-fixed text-on-secondary-fixed font-semibold px-2.5 py-0.5 rounded-full">Visual
+                    Split</span>
+                </div>
+                <span class="font-label-sm text-label-sm text-on-surface-variant">Purchasing Power</span>
+              </div>
+
+              <!-- SVG Donut Chart -->
+              <div class="flex items-center justify-center gap-6 bg-surface-container-low rounded-2xl p-4 mb-5">
+                <div class="relative w-28 h-28 shrink-0">
+                  <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
+                    <circle cx="50" cy="50" r="38" fill="none" stroke="#dae2fd" stroke-width="12" />
+                    <circle id="sip-donut-invested" cx="50" cy="50" r="38" fill="none" stroke="#006398"
+                      stroke-width="12" stroke-dasharray="0 238.76" stroke-dashoffset="0" stroke-linecap="butt"
+                      class="transition-all duration-500" />
+                    <circle id="sip-donut-returns" cx="50" cy="50" r="38" fill="none" stroke="#005d42" stroke-width="12"
+                      stroke-dasharray="0 238.76" stroke-dashoffset="0" stroke-linecap="butt"
+                      class="transition-all duration-500" />
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                    <span class="font-label-sm text-[10px] text-on-surface-variant uppercase">Gains</span>
+                    <span id="sip-donut-pct" class="font-headline-sm text-base font-bold text-primary tnum">—</span>
+                  </div>
+                </div>
+                <div class="space-y-2.5 text-body-sm">
+                  <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-secondary shrink-0"></span>
+                    <div>
+                      <span class="text-on-surface-variant block leading-tight">Invested Principal</span>
+                      <span id="sip-legend-invested" class="font-semibold text-on-surface tnum">—</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-primary shrink-0"></span>
+                    <div>
+                      <span class="text-on-surface-variant block leading-tight">Est. Returns</span>
+                      <span id="sip-legend-returns" class="font-semibold text-primary tnum">—</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-3 font-body-md text-body-md">
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Inflation-Adjusted Value (@ 6% p.a.)</span>
+                  <span id="sip-real-value" class="font-semibold text-on-surface tnum">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                  <span class="text-on-surface-variant">Post-Maturity SWP (@ 4% Rule / mo)</span>
+                  <span id="sip-swp-monthly" class="font-semibold text-primary tnum">—</span>
+                </div>
+                <div class="flex justify-between items-center py-1.5">
+                  <span class="text-on-surface-variant">Est. Equity LTCG (&gt;₹1.25L @ 12.5%)</span>
+                  <span id="sip-ltcg-est" class="font-semibold text-on-surface tnum">—</span>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="mt-6 pt-5 border-t border-outline-variant/20 flex items-center justify-between text-label-sm font-label-sm text-on-surface-variant">
+              <span>Equity LTCG Exemption: ₹1,25,000 / Tax Year</span>
+              <span class="text-secondary font-semibold">Sec 112A</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Year-Wise Wealth Growth Chart -->
+        <div id="sip-chart-card" class="bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-sm mb-8">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-[20px]">bar_chart</span>
+              </div>
+              <div>
+                <h3 class="font-headline-sm text-headline-sm text-on-surface">Year-Wise Wealth Growth Chart</h3>
+                <p class="font-body-sm text-body-sm text-on-surface-variant">Cumulative invested capital vs. compounded
+                  returns over your horizon</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 text-label-sm font-label-sm">
+              <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-secondary"></span>
+                Invested</span>
+              <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-primary"></span>
+                Total Value</span>
+            </div>
+          </div>
+          <div class="w-full overflow-x-auto">
+            <svg id="sip-growth-chart-svg" viewBox="0 0 680 220" class="w-full min-w-[460px] h-56" role="img"
+              aria-label="Year-wise SIP growth chart">
+              <text x="340" y="115" text-anchor="middle" fill="#6f7974" font-size="13"
+                font-family="Inter, sans-serif">Calculate SIP / Lumpsum returns to render year-wise growth chart</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Year-by-Year SIP Compounding Schedule (Accordion) -->
+        <div class="bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-sm mb-8">
+          <button class="w-full flex items-center justify-between text-left group gap-3" id="toggle-sip-schedule"
+            type="button" aria-expanded="false">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:bg-primary/10 group-hover:text-primary transition-colors shrink-0">
+                <span class="material-symbols-outlined text-[20px]">calendar_month</span>
+              </div>
+              <div>
+                <h3 class="font-headline-sm text-headline-sm text-on-surface">Year-by-Year SIP Compounding Schedule</h3>
+                <p class="font-body-sm text-body-sm text-on-surface-variant">Track cumulative invested capital, annual
+                  wealth gain, and portfolio value each year</p>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-on-surface-variant transition-transform duration-300 shrink-0"
+              id="sip-accordion-arrow">expand_more</span>
+          </button>
+
+          <div class="mt-6 overflow-x-auto max-h-96 overflow-y-auto hidden" id="sip-schedule-container">
+            <table class="w-full text-left font-body-sm text-body-sm min-w-[600px]">
+              <thead class="sticky top-0 z-10">
+                <tr class="bg-surface-container-low text-on-surface font-semibold font-label-md text-label-md">
+                  <th class="py-3 px-4 rounded-l-xl">Year</th>
+                  <th class="py-3 px-4 text-right">Annual Contribution</th>
+                  <th class="py-3 px-4 text-right">Cumulative Invested</th>
+                  <th class="py-3 px-4 text-right">Total Returns</th>
+                  <th class="py-3 px-4 text-right rounded-r-xl">Year-End Value</th>
+                </tr>
+              </thead>
+              <tbody id="sip-schedule-tbody" class="divide-y divide-surface-container tnum"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SIP Export Action Strip -->
+        <div
+          class="bg-surface-container-low rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[22px]">summarize</span>
+            </div>
+            <div>
+              <p class="font-headline-sm text-headline-sm text-on-surface">Export Wealth Projection</p>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Download your full year-by-year SIP schedule
+                on formal A4 paper.</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
+            <button id="btn-sip-pdf" type="button"
+              class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-label-md text-label-md font-semibold bg-surface-container-lowest hover:bg-surface-container text-on-surface transition-all flex items-center justify-center gap-1.5 shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+              <span>A4 PDF</span>
+            </button>
+            <button id="btn-sip-docx" type="button"
+              class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-label-md text-label-md font-semibold bg-primary hover:bg-primary-container text-on-primary transition-all flex items-center justify-center gap-1.5 shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">article</span>
+              <span>A4 DOCX</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TOOL 4: HRA & RENT EXEMPTION CALCULATOR (SEC 10(13A) / OLD REGIME)   -->
+      <!-- =================================================================== -->
+      <section id="panel-hra-rent-exemption" data-tab-panel="hra-rent-exemption" class="hidden flex-col w-full">
+        <!-- Top Utility Context Banner -->
+        <div class="relative bg-surface-container-low rounded-3xl p-6 sm:p-8 mb-6 overflow-hidden">
+          <div
+            class="absolute -right-16 -top-16 w-64 h-64 bg-primary-fixed/30 rounded-full blur-3xl pointer-events-none">
+          </div>
+          <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-1.5 max-w-xl">
+              <div
+                class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm">
+                <span class="material-symbols-outlined text-[14px]">home_work</span>
+                <span>Rule 2A — Old Tax Regime Salaried Exemption</span>
+              </div>
+              <h1 class="font-headline-lg text-headline-lg-mobile sm:text-headline-lg text-on-surface tracking-tight">
+                HRA &amp; Rent Exemption Calculator</h1>
+              <p class="font-body-md text-body-md text-on-surface-variant">Compute your exact House Rent Allowance (HRA)
+                tax exemption (least of 3 statutory conditions). Note: HRA exemption is unavailable under the New Tax
+                Regime.</p>
+            </div>
+            <div
+              class="flex items-center gap-3 bg-surface-container-lowest p-3 rounded-2xl shadow-sm self-start md:self-auto shrink-0">
+              <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-[22px]">real_estate_agent</span>
+              </div>
+              <div>
+                <span class="font-label-sm text-label-sm text-on-surface-variant block uppercase tracking-wider">Exempt
+                  HRA</span>
+                <span id="hra-hero-exempt"
+                  class="font-headline-sm text-headline-sm text-primary font-bold tnum">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- City Classification Segments -->
+          <div class="mt-6 pt-5 border-t border-outline-variant/20 flex flex-wrap gap-2" id="hra-city-selector">
+            <button type="button" data-city="metro"
+              class="hra-city-btn active px-4 py-2 rounded-xl font-label-md text-label-md transition-all bg-primary text-on-primary font-semibold shadow-sm">
+              Metro City (Delhi, Mumbai, Kolkata, Chennai — 50%)
+            </button>
+            <button type="button" data-city="non-metro"
+              class="hra-city-btn px-4 py-2 rounded-xl font-label-md text-label-md transition-all bg-surface-container hover:bg-surface-container-high text-on-surface">
+              Non-Metro City (All Other Cities — 40%)
+            </button>
+          </div>
+        </div>
+
+        <!-- Primary Interactive Card -->
+        <div class="bg-surface-container-lowest rounded-3xl p-6 sm:p-8 shadow-xl shadow-surface-variant/40 mb-8">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b border-outline-variant/20">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[24px]">calculate</span>
+              <h2 class="font-headline-sm text-headline-sm text-on-surface">Annual Salary &amp; Rent Inputs</h2>
+            </div>
+            <span
+              class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2.5 py-1 rounded-md">Annual
+              Figures (₹)</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center gap-2">
+                <label class="font-label-md text-label-md text-on-surface font-semibold" for="hra-basic">Annual Basic
+                  Salary</label>
+                <span class="font-label-sm text-label-sm text-primary font-medium shrink-0">Required</span>
+              </div>
+              <div class="relative">
+                <span
+                  class="absolute left-3.5 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">₹</span>
+                <input id="hra-basic" min="0" step="10000" type="number" value="" placeholder="e.g. 800000"
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-8 pr-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20" />
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                <span class="font-label-sm text-label-sm text-on-surface-variant">Presets:</span>
+                <button type="button" data-val="600000"
+                  class="hra-basic-preset px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm">₹6L</button>
+                <button type="button" data-val="900000"
+                  class="hra-basic-preset px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm">₹9L</button>
+                <button type="button" data-val="1200000"
+                  class="hra-basic-preset px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm">₹12L</button>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center gap-2">
+                <label class="font-label-md text-label-md text-on-surface font-semibold" for="hra-da">Annual DA
+                  (Qualifying for Retirement)</label>
+                <span class="font-label-sm text-label-sm text-on-surface-variant shrink-0">Optional</span>
+              </div>
+              <div class="relative">
+                <span
+                  class="absolute left-3.5 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">₹</span>
+                <input id="hra-da" min="0" step="5000" type="number" value="" placeholder="0"
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-8 pr-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20" />
+              </div>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Dearness Allowance forming part of retirement
+                benefits</p>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center gap-2">
+                <label class="font-label-md text-label-md text-on-surface font-semibold" for="hra-received">Annual HRA
+                  Received</label>
+                <span class="font-label-sm text-label-sm text-primary font-medium shrink-0">Per Payslip</span>
+              </div>
+              <div class="relative">
+                <span
+                  class="absolute left-3.5 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">₹</span>
+                <input id="hra-received" min="0" step="5000" type="number" value="" placeholder="e.g. 320000"
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-8 pr-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20" />
+              </div>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Total HRA component received over 12 months
+              </p>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center gap-2">
+                <label class="font-label-md text-label-md text-on-surface font-semibold" for="hra-rent">Annual Actual
+                  Rent Paid</label>
+                <span class="font-label-sm text-label-sm text-primary font-medium shrink-0">Rent Receipts</span>
+              </div>
+              <div class="relative">
+                <span
+                  class="absolute left-3.5 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">₹</span>
+                <input id="hra-rent" min="0" step="6000" type="number" value="" placeholder="e.g. 360000"
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-8 pr-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20" />
+              </div>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Landlord PAN mandatory if annual rent exceeds
+                ₹1,00,000</p>
+            </div>
+          </div>
+
+          <div id="hra-error-box"
+            class="hidden mt-5 rounded-2xl bg-error-container/40 border border-error/30 px-4 py-3 text-on-error-container flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">error</span>
+            <div id="hra-error-msg" class="font-body-sm text-body-sm"></div>
+          </div>
+
+          <div
+            class="mt-8 pt-6 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+              <span class="material-symbols-outlined text-[18px] text-primary">info</span>
+              <span>Exempt HRA applies strictly when opting for the Old Tax Regime.</span>
+            </div>
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+              <button id="btn-hra-reset" type="button"
+                class="w-1/2 sm:w-auto px-5 py-3 rounded-xl font-label-lg text-label-lg font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                <span>Reset</span>
+              </button>
+              <button id="btn-hra-calculate" type="button"
+                class="w-1/2 sm:w-auto px-7 py-3 rounded-xl font-label-lg text-label-lg font-semibold bg-primary hover:bg-primary-container text-on-primary shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">flash_on</span>
+                <span>Calculate HRA</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- HRA Banner -->
+        <div id="hra-outcome-banner"
+          class="bg-surface-container-low rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 mb-6 shadow-sm">
+          <div class="flex items-center gap-3.5">
+            <div
+              class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shrink-0 shadow-sm">
+              <span class="material-symbols-outlined text-[22px]">fact_check</span>
+            </div>
+            <div>
+              <p id="hra-banner-title" class="font-headline-sm text-headline-sm text-on-surface font-bold tnum">Enter
+                salary, HRA received, and rent paid to compute exemption.</p>
+              <p id="hra-banner-subtitle" class="font-body-sm text-body-sm text-on-surface-variant tnum">Minimum of the
+                three Rule 2A conditions qualifies as exempt HRA.</p>
+            </div>
+          </div>
+          <div class="hidden md:flex flex-col text-right shrink-0">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Exempt
+              Share</span>
+            <span id="hra-banner-pct" class="font-label-lg text-label-lg text-primary font-bold tnum">—</span>
+          </div>
+        </div>
+
+        <!-- HRA Result Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div
+            class="relative bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-lg shadow-surface-variant/30 overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-primary"></div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="font-headline-sm text-headline-sm text-on-surface font-bold">Exemption Summary</span>
+              <span class="font-label-sm text-label-sm text-primary bg-primary-fixed/40 px-2.5 py-0.5 rounded-full">Old
+                Regime</span>
+            </div>
+            <div class="bg-surface-container-low rounded-2xl p-4 mb-5">
+              <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">Eligible
+                Tax-Exempt HRA</span>
+              <span id="hra-exempt-amount"
+                class="font-display-hero text-2xl sm:text-headline-lg text-primary font-bold tnum block mt-1">—</span>
+            </div>
+            <div class="space-y-3 font-body-md text-body-md">
+              <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                <span class="text-on-surface-variant">Taxable HRA (Old Regime)</span>
+                <span id="hra-taxable-amount" class="font-semibold text-on-surface tnum">—</span>
+              </div>
+              <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                <span class="text-on-surface-variant">Taxable HRA (New Regime)</span>
+                <span id="hra-newregime-taxable" class="font-semibold text-outline tnum">—</span>
+              </div>
+              <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                <span class="text-on-surface-variant">Landlord PAN Needed (&gt; ₹1L/yr)</span>
+                <span id="hra-pan-status" class="font-semibold text-on-surface">—</span>
+              </div>
+              <div class="flex justify-between items-center py-1.5">
+                <span class="text-on-surface-variant">Sec 194-IB TDS (&gt; ₹50k/mo)</span>
+                <span id="hra-194ib-status" class="font-semibold text-on-surface">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="relative bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-sm overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-secondary"></div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="font-headline-sm text-headline-sm text-on-surface font-bold">3-Rule Statutory
+                Computation</span>
+              <span id="hra-binding-badge"
+                class="font-label-sm text-label-sm text-secondary bg-secondary-fixed/50 px-2.5 py-0.5 rounded-full">Rule
+                2A</span>
+            </div>
+            <div class="space-y-3 font-body-md text-body-md">
+              <div class="bg-surface-container-low rounded-2xl p-3.5 flex justify-between items-center">
+                <div>
+                  <span class="font-label-md text-label-md text-on-surface block font-semibold">1. Actual HRA
+                    Received</span>
+                  <span class="font-body-sm text-body-sm text-on-surface-variant">Employer allowance component</span>
+                </div>
+                <span id="hra-cond1" class="font-headline-sm text-headline-sm font-bold text-on-surface tnum">—</span>
+              </div>
+              <div class="bg-surface-container-low rounded-2xl p-3.5 flex justify-between items-center">
+                <div>
+                  <span class="font-label-md text-label-md text-on-surface block font-semibold">2. Rent Paid minus 10%
+                    Salary</span>
+                  <span class="font-body-sm text-body-sm text-on-surface-variant">Rent − 10% of (Basic + DA)</span>
+                </div>
+                <span id="hra-cond2" class="font-headline-sm text-headline-sm font-bold text-on-surface tnum">—</span>
+              </div>
+              <div class="bg-surface-container-low rounded-2xl p-3.5 flex justify-between items-center">
+                <div>
+                  <span id="hra-cond3-title" class="font-label-md text-label-md text-on-surface block font-semibold">3.
+                    50% of Salary (Metro Cap)</span>
+                  <span class="font-body-sm text-body-sm text-on-surface-variant">50% Metro / 40% Non-Metro</span>
+                </div>
+                <span id="hra-cond3" class="font-headline-sm text-headline-sm font-bold text-on-surface tnum">—</span>
+              </div>
+              <div class="pt-1 text-body-sm font-body-sm text-on-surface-variant flex justify-between">
+                <span>Binding Exemption Limit:</span>
+                <span id="hra-binding-rule" class="font-semibold text-primary">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HRA Export & Apply Action Strip -->
+        <div
+          class="bg-surface-container-low rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[22px]">sync_alt</span>
+            </div>
+            <div>
+              <p class="font-headline-sm text-headline-sm text-on-surface">Use in Income Tax Estimator</p>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Transfer your exempt HRA directly into the
+                Old Regime comparison or download A4 reports.</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
+            <button id="btn-hra-pdf" type="button"
+              class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-label-md text-label-md font-semibold bg-surface-container-lowest hover:bg-surface-container text-on-surface transition-all flex items-center justify-center gap-1.5 shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span><span>A4 PDF</span>
+            </button>
+            <button id="btn-hra-docx" type="button"
+              class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-label-md text-label-md font-semibold bg-surface-container-lowest hover:bg-surface-container text-on-surface transition-all flex items-center justify-center gap-1.5 shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">article</span><span>A4 DOCX</span>
+            </button>
+            <button id="btn-hra-apply-tax" type="button"
+              class="w-full sm:w-auto px-5 py-2.5 rounded-xl font-label-md text-label-md font-semibold bg-primary hover:bg-primary-container text-on-primary transition-all flex items-center justify-center gap-1.5 shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">arrow_forward</span><span>Apply to Tax Tool</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TOOL 5: FD & RD RETURNS CALCULATOR (WITH SEC 194A TDS ASSUMPTIONS)   -->
+      <!-- =================================================================== -->
+      <section id="panel-fd-rd-returns" data-tab-panel="fd-rd-returns" class="hidden flex-col w-full">
+        <!-- Top Utility Context Banner -->
+        <div class="relative bg-surface-container-low rounded-3xl p-6 sm:p-8 mb-6 overflow-hidden">
+          <div
+            class="absolute -right-16 -top-16 w-64 h-64 bg-secondary-fixed/35 rounded-full blur-3xl pointer-events-none">
+          </div>
+          <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-1.5 max-w-xl">
+              <div
+                class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm">
+                <span class="material-symbols-outlined text-[14px]">savings</span>
+                <span>Quarterly Bank Compounding &amp; Sec 194A TDS</span>
+              </div>
+              <h1 class="font-headline-lg text-headline-lg-mobile sm:text-headline-lg text-on-surface tracking-tight">FD
+                &amp; RD Maturity Calculator</h1>
+              <p class="font-body-md text-body-md text-on-surface-variant">Calculate Fixed Deposit (FD) and Recurring
+                Deposit (RD) maturity with configurable compounding frequency and Section 194A bank TDS thresholds
+                (₹50,000 regular / ₹1,00,000 senior citizen).</p>
+            </div>
+            <div
+              class="flex items-center gap-3 bg-surface-container-lowest p-3 rounded-2xl shadow-sm self-start md:self-auto shrink-0">
+              <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-[22px]">account_balance</span>
+              </div>
+              <div>
+                <span class="font-label-sm text-label-sm text-on-surface-variant block uppercase tracking-wider">Gross
+                  Maturity</span>
+                <span id="fdrd-hero-maturity"
+                  class="font-headline-sm text-headline-sm text-primary font-bold tnum">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mode Segments -->
+          <div class="mt-6 pt-5 border-t border-outline-variant/20 flex flex-wrap gap-2" id="fdrd-type-selector">
+            <button type="button" data-type="fd"
+              class="fdrd-type-btn active px-4 py-2 rounded-xl font-label-md text-label-md transition-all bg-primary text-on-primary font-semibold shadow-sm">
+              Fixed Deposit (FD Lumpsum)
+            </button>
+            <button type="button" data-type="rd"
+              class="fdrd-type-btn px-4 py-2 rounded-xl font-label-md text-label-md transition-all bg-surface-container hover:bg-surface-container-high text-on-surface">
+              Recurring Deposit (RD Monthly)
+            </button>
+          </div>
+        </div>
+
+        <!-- Interactive Input Card -->
+        <div class="bg-surface-container-lowest rounded-3xl p-6 sm:p-8 shadow-xl shadow-surface-variant/40 mb-8">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b border-outline-variant/20">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[24px]">calculate</span>
+              <h2 class="font-headline-sm text-headline-sm text-on-surface">Deposit &amp; Interest Parameters</h2>
+            </div>
+            <span id="fdrd-mode-badge"
+              class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2.5 py-1 rounded-md">Fixed
+              Deposit (FD)</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center gap-2">
+                <label id="fdrd-amount-label" class="font-label-md text-label-md text-on-surface font-semibold"
+                  for="fdrd-amount">Deposit Principal Amount</label>
+                <span class="font-label-sm text-label-sm text-primary font-medium shrink-0">Required</span>
+              </div>
+              <div class="relative">
+                <span
+                  class="absolute left-3.5 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">₹</span>
+                <input id="fdrd-amount" min="100" step="1000" type="number" value="" placeholder="e.g. 500000"
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-8 pr-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20" />
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                <span class="font-label-sm text-label-sm text-on-surface-variant">Presets:</span>
+                <button type="button" data-val="50000"
+                  class="fdrd-preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm">₹50K</button>
+                <button type="button" data-val="100000"
+                  class="fdrd-preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm">₹1L</button>
+                <button type="button" data-val="500000"
+                  class="fdrd-preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm">₹5L</button>
+                <button type="button" data-val="1000000"
+                  class="fdrd-preset-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm">₹10L</button>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center gap-2">
+                <label class="font-label-md text-label-md text-on-surface font-semibold" for="fdrd-rate">Annual Interest
+                  Rate</label>
+                <span class="font-label-sm text-label-sm text-on-surface-variant shrink-0">0.5% – 15% p.a.</span>
+              </div>
+              <div class="relative">
+                <input id="fdrd-rate" min="0.5" max="15" step="0.1" type="number" value="" placeholder="e.g. 7.0"
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-4 pr-10 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20" />
+                <span
+                  class="absolute right-4 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">%</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                <span class="font-label-sm text-label-sm text-on-surface-variant">Typical:</span>
+                <button type="button" data-rate="6.5"
+                  class="fdrd-rate-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm">6.5%</button>
+                <button type="button" data-rate="7.0"
+                  class="fdrd-rate-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm">7.0%</button>
+                <button type="button" data-rate="7.5"
+                  class="fdrd-rate-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm">7.5%</button>
+                <button type="button" data-rate="8.0"
+                  class="fdrd-rate-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm">8.0%</button>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center gap-2">
+                <label class="font-label-md text-label-md text-on-surface font-semibold" for="fdrd-months">Deposit
+                  Tenure (Months)</label>
+                <span class="font-label-sm text-label-sm text-on-surface-variant shrink-0">1 – 120 Months</span>
+              </div>
+              <div class="relative">
+                <input id="fdrd-months" min="1" max="120" step="1" type="number" value="" placeholder="e.g. 36"
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-4 pr-20 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20" />
+                <span
+                  class="absolute right-4 top-1/2 -translate-y-1/2 font-label-md text-label-md text-outline select-none">Months</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                <button type="button" data-months="12"
+                  class="fdrd-month-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm">12M</button>
+                <button type="button" data-months="24"
+                  class="fdrd-month-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm">24M</button>
+                <button type="button" data-months="36"
+                  class="fdrd-month-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm">36M</button>
+                <button type="button" data-months="60"
+                  class="fdrd-month-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm">60M</button>
+                <button type="button" data-months="120"
+                  class="fdrd-month-btn px-2 py-0.5 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm">120M</button>
+              </div>
+            </div>
+
+            <div class="space-y-2.5">
+              <div>
+                <label class="font-label-md text-label-md text-on-surface font-semibold block mb-1.5"
+                  for="fdrd-compounding">Compounding Frequency &amp; TDS Profile</label>
+                <select id="fdrd-compounding"
+                  class="w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface px-4 py-3 rounded-xl font-label-md text-label-md font-medium outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer">
+                  <option value="4" selected>Quarterly Compounding (Indian Bank Standard)</option>
+                  <option value="12">Monthly Compounding</option>
+                  <option value="2">Half-Yearly Compounding</option>
+                  <option value="1">Annual Compounding</option>
+                </select>
+              </div>
+              <div class="flex flex-wrap items-center gap-4 pt-1">
+                <label
+                  class="inline-flex items-center gap-2 font-label-md text-label-md text-on-surface cursor-pointer">
+                  <input id="fdrd-senior" type="checkbox" class="accent-primary rounded" />
+                  <span>Senior Citizen (60+ Yrs — ₹1,00,000 TDS limit)</span>
+                </label>
+                <label
+                  class="inline-flex items-center gap-2 font-label-md text-label-md text-on-surface cursor-pointer">
+                  <input id="fdrd-pan" type="checkbox" checked class="accent-primary rounded" />
+                  <span>PAN Linked (10% TDS vs 20%)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div id="fdrd-error-box"
+            class="hidden mt-5 rounded-2xl bg-error-container/40 border border-error/30 px-4 py-3 text-on-error-container flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">error</span>
+            <div id="fdrd-error-msg" class="font-body-sm text-body-sm"></div>
+          </div>
+
+          <div
+            class="mt-8 pt-6 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+              <span class="material-symbols-outlined text-[18px] text-primary">gavel</span>
+              <span>Sec 194A TDS: ₹50,000 (regular) / ₹1,00,000 (senior 60+) threshold per Tax Year.</span>
+            </div>
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+              <button id="btn-fdrd-reset" type="button"
+                class="w-1/2 sm:w-auto px-5 py-3 rounded-xl font-label-lg text-label-lg font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">restart_alt</span><span>Reset</span>
+              </button>
+              <button id="btn-fdrd-calculate" type="button"
+                class="w-1/2 sm:w-auto px-7 py-3 rounded-xl font-label-lg text-label-lg font-semibold bg-primary hover:bg-primary-container text-on-primary shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">flash_on</span><span>Calculate Maturity</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Outcome Banner -->
+        <div id="fdrd-outcome-banner"
+          class="bg-surface-container-low rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 mb-6 shadow-sm">
+          <div class="flex items-center gap-3.5">
+            <div
+              class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shrink-0 shadow-sm">
+              <span class="material-symbols-outlined text-[22px]">trending_up</span>
+            </div>
+            <div>
+              <p id="fdrd-banner-title" class="font-headline-sm text-headline-sm text-on-surface font-bold tnum">Enter
+                deposit amount, interest rate, and tenure to project returns.</p>
+              <p id="fdrd-banner-subtitle" class="font-body-sm text-body-sm text-on-surface-variant tnum">Interest is
+                fully taxable at slab rate; TDS is an advance tax deduction if threshold is crossed.</p>
+            </div>
+          </div>
+          <div class="hidden md:flex flex-col text-right shrink-0">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Effective
+              Yield</span>
+            <span id="fdrd-banner-yield" class="font-label-lg text-label-lg text-primary font-bold tnum">—</span>
+          </div>
+        </div>
+
+        <!-- FD/RD Result Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div
+            class="relative bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-lg shadow-surface-variant/30 overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-primary"></div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="font-headline-sm text-headline-sm text-on-surface font-bold">Maturity Summary</span>
+              <span id="fdrd-type-pill"
+                class="font-label-sm text-label-sm bg-primary text-on-primary font-semibold px-2.5 py-0.5 rounded-full">FD
+                Plan</span>
+            </div>
+            <div class="bg-surface-container-low rounded-2xl p-4 mb-5">
+              <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">Gross
+                Maturity Value</span>
+              <span id="fdrd-maturity-val"
+                class="font-display-hero text-2xl sm:text-headline-lg text-primary font-bold tnum block mt-1">—</span>
+            </div>
+            <div class="space-y-3 font-body-md text-body-md">
+              <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                <span class="text-on-surface-variant">Total Invested Principal</span>
+                <span id="fdrd-invested-val" class="font-semibold text-on-surface tnum">—</span>
+              </div>
+              <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                <span class="text-on-surface-variant">Total Interest Earned</span>
+                <span id="fdrd-interest-val" class="font-semibold text-primary tnum">—</span>
+              </div>
+              <div class="flex justify-between items-center py-1.5">
+                <span class="text-on-surface-variant">Effective Annual Yield</span>
+                <span id="fdrd-effective-yield" class="font-semibold text-on-surface tnum">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="relative bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-sm overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-secondary"></div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="font-headline-sm text-headline-sm text-on-surface font-bold">TDS Assumption (Sec 194A)</span>
+              <span
+                class="font-label-sm text-label-sm bg-secondary-fixed text-on-secondary-fixed font-semibold px-2.5 py-0.5 rounded-full">Bank
+                TDS</span>
+            </div>
+            <div class="bg-surface-container-low rounded-2xl p-4 mb-5">
+              <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">Est. Net
+                Maturity (Post-TDS)</span>
+              <span id="fdrd-post-tds-val"
+                class="font-display-hero text-2xl sm:text-headline-lg text-on-surface font-bold tnum block mt-1">—</span>
+            </div>
+            <div class="space-y-3 font-body-md text-body-md">
+              <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                <span class="text-on-surface-variant">Annual TDS Threshold</span>
+                <span id="fdrd-tds-threshold" class="font-semibold text-on-surface tnum">—</span>
+              </div>
+              <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                <span class="text-on-surface-variant">TDS Applicability Status</span>
+                <span id="fdrd-tds-status" class="font-semibold text-secondary tnum">—</span>
+              </div>
+              <div class="flex justify-between items-center py-1.5">
+                <span class="text-on-surface-variant">Estimated Total TDS (Tenure)</span>
+                <span id="fdrd-est-tds" class="font-semibold text-tertiary tnum">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FD/RD Yearly Breakdown Accordion -->
+        <div class="bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-sm mb-8">
+          <button id="toggle-fdrd-schedule" type="button" aria-expanded="false"
+            class="w-full flex items-center justify-between text-left group gap-3">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:bg-primary/10 group-hover:text-primary shrink-0">
+                <span class="material-symbols-outlined text-[20px]">calendar_month</span>
+              </div>
+              <div>
+                <h3 class="font-headline-sm text-headline-sm text-on-surface">Period-Wise Growth &amp; Interest Schedule
+                </h3>
+                <p class="font-body-sm text-body-sm text-on-surface-variant">Track principal invested, accrued interest,
+                  and closing deposit balance</p>
+              </div>
+            </div>
+            <span id="fdrd-accordion-arrow"
+              class="material-symbols-outlined text-on-surface-variant transition-transform duration-300 shrink-0">expand_more</span>
+          </button>
+          <div id="fdrd-schedule-container" class="mt-6 overflow-x-auto max-h-96 overflow-y-auto hidden">
+            <table class="w-full text-left font-body-sm text-body-sm min-w-[540px]">
+              <thead>
+                <tr class="bg-surface-container-low text-on-surface font-semibold font-label-md text-label-md">
+                  <th class="py-3 px-4 rounded-l-xl">Period</th>
+                  <th class="py-3 px-4 text-right">Principal Invested</th>
+                  <th class="py-3 px-4 text-right">Total Interest</th>
+                  <th class="py-3 px-4 text-right rounded-r-xl">Closing Balance</th>
+                </tr>
+              </thead>
+              <tbody id="fdrd-schedule-tbody" class="divide-y divide-surface-container tnum"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- FD/RD Export Strip -->
+        <div
+          class="bg-surface-container-low rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[22px]">summarize</span>
+            </div>
+            <div>
+              <p class="font-headline-sm text-headline-sm text-on-surface">Export Deposit Maturity Report</p>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Generate A4 PDF or DOCX schedule with Sec
+                194A TDS analysis.</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
+            <button id="btn-fdrd-pdf" type="button"
+              class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-label-md text-label-md font-semibold bg-surface-container-lowest hover:bg-surface-container text-on-surface transition-all flex items-center justify-center gap-1.5 shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span><span>A4 PDF</span>
+            </button>
+            <button id="btn-fdrd-docx" type="button"
+              class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-label-md text-label-md font-semibold bg-primary hover:bg-primary-container text-on-primary transition-all flex items-center justify-center gap-1.5 shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">article</span><span>A4 DOCX</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TOOL 6: NPS TAX SAVINGS & RETIREMENT PENSION PLANNER                 -->
+      <!-- =================================================================== -->
+      <section id="panel-nps-tax-savings" data-tab-panel="nps-tax-savings" class="hidden flex-col w-full">
+        <!-- Top Utility Context Banner -->
+        <div class="relative bg-surface-container-low rounded-3xl p-6 sm:p-8 mb-6 overflow-hidden">
+          <div
+            class="absolute -right-16 -top-16 w-64 h-64 bg-primary-fixed/30 rounded-full blur-3xl pointer-events-none">
+          </div>
+          <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-1.5 max-w-xl">
+              <div
+                class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm">
+                <span class="material-symbols-outlined text-[14px]">shield_with_heart</span>
+                <span>PFRDA Corpus &amp; Sec 80CCD(1B) / 80CCD(2) Planner</span>
+              </div>
+              <h1 class="font-headline-lg text-headline-lg-mobile sm:text-headline-lg text-on-surface tracking-tight">
+                NPS Tax Savings &amp; Pension Calculator</h1>
+              <p class="font-body-md text-body-md text-on-surface-variant">Estimate your National Pension System
+                retirement corpus, monthly annuity pension, and exact regime-wise tax deductions under Sections
+                80CCD(1), 80CCD(1B), and Employer 80CCD(2).</p>
+            </div>
+            <div
+              class="flex items-center gap-3 bg-surface-container-lowest p-3 rounded-2xl shadow-sm self-start md:self-auto shrink-0">
+              <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-[22px]">elderly</span>
+              </div>
+              <div>
+                <span class="font-label-sm text-label-sm text-on-surface-variant block uppercase tracking-wider">Est.
+                  Corpus</span>
+                <span id="nps-hero-corpus"
+                  class="font-headline-sm text-headline-sm text-primary font-bold tnum">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NPS Inputs Card -->
+        <div class="bg-surface-container-lowest rounded-3xl p-6 sm:p-8 shadow-xl shadow-surface-variant/40 mb-8">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-6 pb-4 border-b border-outline-variant/20">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[24px]">calculate</span>
+              <h2 class="font-headline-sm text-headline-sm text-on-surface">Subscriber, Contribution &amp; Annuity
+                Inputs</h2>
+            </div>
+            <span
+              class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2.5 py-1 rounded-md">Min
+              40% Annuity at Exit</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div class="space-y-1.5">
+              <label class="font-label-md text-label-md text-on-surface font-semibold block" for="nps-age">Current Age
+                (18–65 Yrs)</label>
+              <input id="nps-age" min="18" max="65" step="1" type="number" value="" placeholder="e.g. 30"
+                class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal px-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20" />
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="font-label-md text-label-md text-on-surface font-semibold block"
+                for="nps-retire-age">Retirement Age (Up to 75)</label>
+              <input id="nps-retire-age" min="30" max="75" step="1" type="number" value="" placeholder="e.g. 60"
+                class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal px-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20" />
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="font-label-md text-label-md text-on-surface font-semibold block" for="nps-sector">Employer
+                Sector</label>
+              <select id="nps-sector"
+                class="w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface px-4 py-3.5 rounded-xl font-label-md text-label-md font-semibold outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer">
+                <option value="private" selected>Private (14% New / 10% Old Cap)</option>
+                <option value="government">Govt (14% Both Regimes Cap)</option>
+              </select>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="font-label-md text-label-md text-on-surface font-semibold block" for="nps-monthly">Monthly
+                Own Contribution</label>
+              <div class="relative">
+                <span
+                  class="absolute left-3.5 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">₹</span>
+                <input id="nps-monthly" min="0" step="500" type="number" value="" placeholder="e.g. 5000"
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-8 pr-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20" />
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="font-label-md text-label-md text-on-surface font-semibold block" for="nps-basic-da">Annual
+                Basic + DA (For 80CCD(2))</label>
+              <div class="relative">
+                <span
+                  class="absolute left-3.5 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">₹</span>
+                <input id="nps-basic-da" min="0" step="10000" type="number" value="" placeholder="e.g. 800000"
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-8 pr-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20" />
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="font-label-md text-label-md text-on-surface font-semibold block" for="nps-emp-pct">Employer
+                NPS % of Basic+DA</label>
+              <div class="relative">
+                <input id="nps-emp-pct" min="0" max="14" step="1" type="number" value="" placeholder="e.g. 10"
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-4 pr-10 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20" />
+                <span
+                  class="absolute right-4 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">%</span>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="font-label-md text-label-md text-on-surface font-semibold block"
+                for="nps-voluntary-1b">Voluntary Annual 80CCD(1B) (Max ₹50k Old)</label>
+              <div class="relative">
+                <span
+                  class="absolute left-3.5 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">₹</span>
+                <input id="nps-voluntary-1b" min="0" max="50000" step="5000" type="number" value=""
+                  placeholder="e.g. 50000"
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-8 pr-4 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20" />
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="font-label-md text-label-md text-on-surface font-semibold block" for="nps-return">Expected
+                Return (% p.a.)</label>
+              <div class="relative">
+                <input id="nps-return" min="1" max="18" step="0.5" type="number" value="" placeholder="e.g. 10"
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 placeholder:font-normal pl-4 pr-10 py-3 rounded-xl font-headline-sm text-headline-sm font-semibold outline-none transition-all focus:ring-2 focus:ring-primary/20" />
+                <span
+                  class="absolute right-4 top-1/2 -translate-y-1/2 font-headline-sm text-headline-sm text-outline select-none">%</span>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="font-label-md text-label-md text-on-surface font-semibold block"
+                for="nps-annuity-pct">Annuity Purchase (40%–100%) / Rate</label>
+              <div class="grid grid-cols-2 gap-2">
+                <input id="nps-annuity-pct" min="40" max="100" step="5" type="number" value="" placeholder="40%"
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 px-3 py-3 rounded-xl font-label-lg text-label-lg font-semibold outline-none focus:ring-2 focus:ring-primary/20" />
+                <input id="nps-annuity-rate" min="2" max="12" step="0.5" type="number" value="" placeholder="6% Yield"
+                  class="tnum w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-outline/50 px-3 py-3 rounded-xl font-label-lg text-label-lg font-semibold outline-none focus:ring-2 focus:ring-primary/20" />
+              </div>
+            </div>
+          </div>
+
+          <div id="nps-error-box"
+            class="hidden mt-5 rounded-2xl bg-error-container/40 border border-error/30 px-4 py-3 text-on-error-container flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-error text-[20px] shrink-0 mt-0.5">error</span>
+            <div id="nps-error-msg" class="font-body-sm text-body-sm"></div>
+          </div>
+
+          <div
+            class="mt-8 pt-6 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+              <span class="material-symbols-outlined text-[18px] text-primary">gavel</span>
+              <span>Up to 60% lump sum withdrawal at retirement is exempt u/s 10(12A); annuity pension is taxable as
+                income.</span>
+            </div>
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+              <button id="btn-nps-reset" type="button"
+                class="w-1/2 sm:w-auto px-5 py-3 rounded-xl font-label-lg text-label-lg font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">restart_alt</span><span>Reset</span>
+              </button>
+              <button id="btn-nps-calculate" type="button"
+                class="w-1/2 sm:w-auto px-7 py-3 rounded-xl font-label-lg text-label-lg font-semibold bg-primary hover:bg-primary-container text-on-primary shadow-md shadow-primary/20 transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">flash_on</span><span>Calculate NPS</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- NPS Banner -->
+        <div id="nps-outcome-banner"
+          class="bg-surface-container-low rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 mb-6 shadow-sm">
+          <div class="flex items-center gap-3.5">
+            <div
+              class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shrink-0 shadow-sm">
+              <span class="material-symbols-outlined text-[22px]">account_balance_wallet</span>
+            </div>
+            <div>
+              <p id="nps-banner-title" class="font-headline-sm text-headline-sm text-on-surface font-bold tnum">Enter
+                age, monthly contribution, and return assumptions to project your pension corpus.</p>
+              <p id="nps-banner-subtitle" class="font-body-sm text-body-sm text-on-surface-variant tnum">Compares annual
+                deduction eligibility across Old and New Regimes.</p>
+            </div>
+          </div>
+          <div class="hidden md:flex flex-col text-right shrink-0">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Est. Monthly
+              Pension</span>
+            <span id="nps-banner-pension" class="font-label-lg text-label-lg text-primary font-bold tnum">—</span>
+          </div>
+        </div>
+
+        <!-- NPS Result Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div
+            class="relative bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-lg shadow-surface-variant/30 overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-primary"></div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="font-headline-sm text-headline-sm text-on-surface font-bold">Retirement Corpus &amp;
+                Pension</span>
+              <span
+                class="font-label-sm text-label-sm bg-primary text-on-primary font-semibold px-2.5 py-0.5 rounded-full">Exit
+                Projection</span>
+            </div>
+            <div class="bg-surface-container-low rounded-2xl p-4 mb-5">
+              <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">Total
+                Corpus at Retirement</span>
+              <span id="nps-total-corpus"
+                class="font-display-hero text-2xl sm:text-headline-lg text-primary font-bold tnum block mt-1">—</span>
+            </div>
+            <div class="space-y-3 font-body-md text-body-md">
+              <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                <span class="text-on-surface-variant">Total Contributions (Self + Emp)</span>
+                <span id="nps-invested-val" class="font-semibold text-on-surface tnum">—</span>
+              </div>
+              <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                <span class="text-on-surface-variant">Estimated Wealth Gains</span>
+                <span id="nps-returns-val" class="font-semibold text-primary tnum">—</span>
+              </div>
+              <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                <span class="text-on-surface-variant">Tax-Free Lump Sum (Sec 10(12A))</span>
+                <span id="nps-lumpsum-val" class="font-semibold text-on-surface tnum">—</span>
+              </div>
+              <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                <span class="text-on-surface-variant">Annuity Corpus Allocation</span>
+                <span id="nps-annuity-corpus" class="font-semibold text-on-surface tnum">—</span>
+              </div>
+              <div class="flex justify-between items-center py-1.5">
+                <span class="text-on-surface-variant">Est. Monthly Annuity Pension</span>
+                <span id="nps-monthly-pension"
+                  class="font-headline-sm text-headline-sm text-primary font-bold tnum">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="relative bg-surface-container-lowest rounded-3xl p-6 sm:p-7 shadow-sm overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-secondary"></div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="font-headline-sm text-headline-sm text-on-surface font-bold">Annual Tax Deduction
+                Eligibility</span>
+              <span
+                class="font-label-sm text-label-sm bg-secondary-fixed text-on-secondary-fixed font-semibold px-2.5 py-0.5 rounded-full">Sec
+                80CCD</span>
+            </div>
+            <div class="bg-surface-container-low rounded-2xl p-4 mb-5">
+              <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">New
+                Regime Deduction (80CCD(2) Only)</span>
+              <span id="nps-new-80ccd2"
+                class="font-display-hero text-2xl sm:text-headline-lg text-secondary font-bold tnum block mt-1">—</span>
+            </div>
+            <div class="space-y-3 font-body-md text-body-md">
+              <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                <span class="text-on-surface-variant">Old: Sec 80CCD(1) (Inside 80C ₹1.5L)</span>
+                <span id="nps-old-80ccd1" class="font-semibold text-on-surface tnum">—</span>
+              </div>
+              <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                <span class="text-on-surface-variant">Old: Sec 80CCD(1B) (Additional ₹50k)</span>
+                <span id="nps-old-80ccd1b" class="font-semibold text-on-surface tnum">—</span>
+              </div>
+              <div class="flex justify-between items-center py-1.5 border-b border-surface-container">
+                <span class="text-on-surface-variant">Old: Employer Sec 80CCD(2)</span>
+                <span id="nps-old-80ccd2" class="font-semibold text-on-surface tnum">—</span>
+              </div>
+              <div class="flex justify-between items-center py-1.5">
+                <span class="text-on-surface-variant">Total Old Regime Eligible Deduction</span>
+                <span id="nps-old-total-ded"
+                  class="font-headline-sm text-headline-sm text-primary font-bold tnum">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NPS Export Strip -->
+        <div
+          class="bg-surface-container-low rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[22px]">summarize</span>
+            </div>
+            <div>
+              <p class="font-headline-sm text-headline-sm text-on-surface">Export NPS &amp; Retirement Projection</p>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">Download your regime-wise 80CCD tax deduction
+                &amp; corpus report on A4 paper.</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-end">
+            <button id="btn-nps-pdf" type="button"
+              class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-label-md text-label-md font-semibold bg-surface-container-lowest hover:bg-surface-container text-on-surface transition-all flex items-center justify-center gap-1.5 shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span><span>A4 PDF</span>
+            </button>
+            <button id="btn-nps-docx" type="button"
+              class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-label-md text-label-md font-semibold bg-primary hover:bg-primary-container text-on-primary transition-all flex items-center justify-center gap-1.5 shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">article</span><span>A4 DOCX</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full bg-surface-container-low mt-auto">
+    <div class="max-w-4xl mx-auto px-4 sm:px-8 py-8 sm:py-10 space-y-6">
+      <div
+        class="bg-surface-container/60 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+        <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-surface-container-highest shrink-0">
+          <span class="material-symbols-outlined text-primary text-[20px]">verified_user</span>
+        </div>
+        <div class="flex-1">
+          <p class="font-label-lg text-label-lg text-on-surface font-semibold">Statutory &amp; Regulatory Information
+            Disclaimer</p>
+          <p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">All figures are estimates for educational
+            and planning purposes based on the Income-tax Act, 2025, Finance Act, 2026, PFRDA guidelines, and GST
+            Council tariff schedules (incometax.gov.in, cbdt.gov.in, cbic.gov.in). They do not constitute legal or
+            professional Chartered Accountant advice.</p>
+        </div>
+      </div>
+      <div
+        class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-outline-variant/30 text-on-surface-variant">
+        <div class="space-y-1">
+          <p id="footer-sync-label" class="font-label-sm text-label-sm font-semibold text-on-surface">Tax Year 2026–27
+            (AY 2027–28) Schedules Updated</p>
+          <p class="font-body-sm text-body-sm">© 2026 BharatCalc Hub v3.0. Independent Indian Financial Estimation
+            Suite.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-4 font-label-md text-label-md">
+          <a id="footer-link-slabs" class="hover:text-primary transition-colors" href="#income-tax">Tax Slabs</a>
+          <a id="footer-link-gst" class="hover:text-primary transition-colors" href="#gst-calculator">GST Matrix</a>
+          <a id="footer-link-sip" class="hover:text-primary transition-colors" href="#sip-mutual-fund">SIP Planner</a>
+          <a id="footer-link-hra" class="hover:text-primary transition-colors" href="#hra-rent-exemption">HRA</a>
+          <a id="footer-link-fdrd" class="hover:text-primary transition-colors" href="#fd-rd-returns">FD / RD</a>
+          <a id="footer-link-nps" class="hover:text-primary transition-colors" href="#nps-tax-savings">NPS</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Pill -->
+  <div id="bharat-toast" role="status" aria-live="polite"
+    class="fixed bottom-5 right-5 z-50 hidden items-center gap-2.5 bg-inverse-surface text-inverse-on-surface px-4 py-3 rounded-2xl shadow-xl font-label-md text-label-md transition-all">
+    <span class="material-symbols-outlined text-inverse-primary text-[18px]">check_circle</span>
+    <span id="bharat-toast-msg">Summary copied to clipboard</span>
+  </div>
+
+  <!-- CA Consultation Modal -->
+  <div id="ca-modal"
+    class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm">
+    <div class="bg-surface-container-lowest rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl space-y-5">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+            <span class="material-symbols-outlined text-[22px]">headset_mic</span>
+          </div>
+          <div>
+            <h3 class="font-headline-sm text-headline-sm text-on-surface">Tax Computation &amp; Filing Summary</h3>
+            <p class="font-body-sm text-body-sm text-on-surface-variant">Pre-filled with your current Tax Year
+              simulation</p>
+          </div>
+        </div>
+        <button id="close-ca-modal" type="button"
+          class="p-1.5 rounded-lg hover:bg-surface-container text-on-surface-variant">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </div>
+      <div id="ca-modal-summary"
+        class="bg-surface-container-low rounded-2xl p-4 space-y-1.5 font-body-sm text-body-sm text-on-surface tnum">
+      </div>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Share this snapshot with your Chartered Accountant or
+        export an A4 report for verification.</p>
+      <div class="flex flex-wrap items-center gap-2.5 pt-1">
+        <button id="modal-copy-btn" type="button"
+          class="flex-1 px-3 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high font-label-md text-label-md font-semibold text-on-surface transition-all">Copy</button>
+        <button id="modal-docx-btn" type="button"
+          class="flex-1 px-3 py-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high font-label-md text-label-md font-semibold text-on-surface transition-all">A4
+          DOCX</button>
+        <button id="modal-print-btn" type="button"
+          class="flex-1 px-3 py-2.5 rounded-xl bg-primary hover:bg-primary-container font-label-md text-label-md font-semibold text-on-primary transition-all">A4
+          PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dedicated Off-Screen A4 Report Sheet (Used if offline PDF fallback print triggers) -->
+  <div id="a4-print-sheet" class="hidden bg-white text-on-surface font-body-md"></div>
+
+  <script defer src="calc-engine.js"></script>
+  <script defer src="app.js"></script>
+</body>
+
+</html>
